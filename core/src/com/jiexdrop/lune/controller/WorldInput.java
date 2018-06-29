@@ -95,9 +95,9 @@ public class WorldInput implements GestureDetector.GestureListener, InputProcess
         camera.direction.rotate(camera.up, deltaX);
         tmp.set(camera.direction).crs(camera.up).nor();
         camera.direction.rotate(tmp, deltaY);
-        Vector2 camAngle = new Vector2(camera.direction.z, camera.direction.x);
+        Vector2 camAngle = new Vector2(camera.direction.x, camera.direction.z);
         //System.out.println(camAngle.angle());
-        world.player.setAngle(camAngle.angle());
+        world.player.setAngle(-camAngle.angle());
         return true;
 
     }

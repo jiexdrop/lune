@@ -37,7 +37,7 @@ public class EntitiesRenderer implements RenderableProvider {
                 for (Renderable r:entityView.renderables) {
                     Renderable renderable = pool.obtain();
                     renderable.set(r);
-                    renderable.worldTransform.rotate(new Vector3(0, 1, 0), entityView.entity.getAngle() - 90);
+                    renderable.worldTransform.rotate(new Vector3(0, 1, 0), entityView.entity.getAngle());
 
                     renderable.worldTransform.setTranslation(entityView.entity.getPosition());
                     renderables.add(renderable);

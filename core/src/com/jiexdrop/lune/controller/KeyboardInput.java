@@ -47,7 +47,7 @@ public class KeyboardInput implements InputProcessor {
 
         if(keycode==Input.Keys.H) {
             world.player.getPosition().set(debugCamera.position);
-
+            System.out.println("Player pos set to debug camera");
         }
 
         return false;

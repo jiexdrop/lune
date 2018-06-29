@@ -40,7 +40,7 @@ public class MoveTo extends Routine {
 
         distance = Vector2.dst(entity.getX(), entity.getZ(), destination.x, destination.z);
 
-        if(distance < GameVariables.MAGNET_SIZE){
+        if(distance < GameVariables.MAGNET_SIZE.x){
             succeed();
         }
     }

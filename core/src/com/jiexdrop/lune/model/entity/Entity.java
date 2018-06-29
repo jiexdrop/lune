@@ -1,7 +1,6 @@
 package com.jiexdrop.lune.model.entity;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.view.World;
@@ -22,7 +21,7 @@ public abstract class Entity {
 
     protected float angle;
 
-    protected int size;
+    protected Vector3 size;
 
     protected int speed;
     protected Color color;
@@ -31,14 +30,15 @@ public abstract class Entity {
 
     protected float elapsedTime;
 
-
+    //public btCollisionObject body;
 
     public Entity(){
         this.position = new Vector3();
         this.velocity = new Vector3();
         this.acceleration = new Vector3();
-
         this.size = GameVariables.NORMAL_SIZE;
+        //body = new btCollisionObject();
+        //body.setCollisionShape(new btBoxShape(getSize()));
         this.speed = GameVariables.ENTITIES_SPEED;
     }
 
@@ -83,7 +83,7 @@ public abstract class Entity {
         return position;
     }
 
-    public int getSize() {
+    public Vector3 getSize() {
         return size;
     }
 
@@ -95,7 +95,7 @@ public abstract class Entity {
         this.speed = speed;
     }
 
-    public void setSize(int size) {
+    public void setSize(Vector3 size) {
         this.size = size;
     }
 

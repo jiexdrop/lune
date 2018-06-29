@@ -15,6 +15,9 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.DebugDrawer;
+import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ObjectSet;
@@ -58,7 +61,9 @@ public class GameRender implements Screen {
 
     private UserInterface userInterface;
 
-    private World world;
+    private PerspectiveCamera actualCamera;
+
+    private final World world;
 
     public EntitiesRenderer entitiesRenderer = new EntitiesRenderer(camera);
 
@@ -66,11 +71,14 @@ public class GameRender implements Screen {
 
     public GameRender(LuneGame game){
         this.game = game;
-        world = new World(game.textures, entitiesRenderer, voxelRenderer);
 
-        voxelRenderer = new VoxelRenderer(game.textures, world.terrain, camera);
+        actualCamera = camera;
 
-        worldInput = new WorldInput(game, world, camera);
+        world = new World(game.textures, entitiesRenderer, voxelRenderer, actualCamera);
+
+        voxelRenderer = new VoxelRenderer(game.textures, world, actualCamera);
+
+        worldInput = new WorldInput(game, world, actualCamera);
         keyboardInput = new KeyboardInput(game, world, debugCamera);
 
         userInterface = new UserInterface(world, game.textures, batch);
@@ -80,7 +88,6 @@ public class GameRender implements Screen {
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1.0f, -0.8f, -0.2f));
 
         debugCamera.far = GameVariables.DEBUG_CAMERA_FAR;
-
 
         GestureDetector gestureDetector = new GestureDetector(worldInput);
         inputMultiplexer = new InputMultiplexer();
@@ -92,6 +99,7 @@ public class GameRender implements Screen {
 
         Gdx.input.setInputProcessor(inputMultiplexer);
 
+        world.addPlayerMesh(voxelRenderer.getCamera());
 
     }
 
@@ -105,47 +113,46 @@ public class GameRender implements Screen {
         world.update(Math.min(Gdx.graphics.getDeltaTime(), GameVariables.TIME_STEP));
         userInterface.act(Math.min(Gdx.graphics.getDeltaTime(), GameVariables.TIME_STEP));
 
-        camera.position.set(world.player.getX(), world.player.getY() + world.player.getSize(), world.player.getZ());
-        camera.update();
 
         voxelRenderer.update();
 
         if(GameVariables.GAMEMODE==1) {
+
             if(inputMultiplexer.getProcessors().contains(worldInput, true)) {
+                actualCamera = debugCamera;
                 inputMultiplexer.removeProcessor(worldInput);
                 inputMultiplexer.addProcessor(debugInput);
-                debugCamera.position.set(world.player.getX(), world.player.getY(), world.player.getZ());
+                actualCamera.position.set(world.player.getX(), world.player.getY() + world.player.getSize().y, world.player.getZ());
             }
-            debugCamera.update();
+            //world.player.getPosition().set(actualCamera.position.x, actualCamera.position.y  - world.player.getSize().y, actualCamera.position.z);
+            //Vector2 camAngle = new Vector2(actualCamera.direction.x, actualCamera.direction.z);
+            //world.player.setAngle(-camAngle.angle());
 
-            world.player.getPosition().set(debugCamera.position);
-            camera.direction.set(debugCamera.direction);
             debugInput.update(delta);
-            voxelBatch.begin(debugCamera);
-            voxelBatch.render(voxelRenderer, environment);
-            voxelBatch.end();
-
-//            entitiesBatch.begin(debugCamera);
-//            entitiesBatch.render(entitiesRenderer, environment);
-//            entitiesBatch.end();
         } else {
+
             if(inputMultiplexer.getProcessors().contains(debugInput, true)) {
+                actualCamera = camera;
                 inputMultiplexer.addProcessor(worldInput);
                 inputMultiplexer.removeProcessor(debugInput);
             }
 
-            voxelBatch.begin(camera);
-            voxelBatch.render(voxelRenderer, environment);
-            voxelBatch.end();
-
-            entitiesBatch.begin(camera);
-            entitiesBatch.render(entitiesRenderer, environment);
-            entitiesBatch.end();
+            actualCamera.position.set(world.player.getX(), world.player.getY() + world.player.getSize().y, world.player.getZ());
         }
+
+        actualCamera.update();
+
+
+        voxelBatch.begin(actualCamera);
+        voxelBatch.render(voxelRenderer, environment);
+        voxelBatch.end();
+
+        entitiesBatch.begin(actualCamera);
+        entitiesBatch.render(entitiesRenderer, environment);
+        entitiesBatch.end();
 
 
         userInterface.draw();
-
 
 
         GameVariables.ENTITIES = 0;

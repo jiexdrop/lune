@@ -5,7 +5,6 @@ import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.entity.Enemy;
 import com.jiexdrop.lune.model.entity.Living;
 import com.jiexdrop.lune.model.entity.routine.Repeat;
-import com.jiexdrop.lune.model.entity.routine.Routine;
 import com.jiexdrop.lune.model.entity.routine.Wander;
 import com.jiexdrop.lune.view.EntityType;
 import com.jiexdrop.lune.view.EntityView;
@@ -31,8 +30,7 @@ public class Populater {
 
             createEnemy(world, position);
 
-            createLiving(world, position);
-
+//            createLiving(world, position);
         }
     }
 
@@ -41,10 +39,12 @@ public class Populater {
         Repeat repeat = new Repeat(new Wander(enemy));
         enemy.setRoutine(repeat);
         world.entitiesRenderer.entityViews.add(new EntityView(gameResources.getModel(EntityType.DUCK), enemy));
+        //world.collisionsWorld.addCollisionObject(enemy.body);
     }
 
     public void createLiving(World world, Vector3 position){
         Living living = new Enemy("SLIME", position);
         world.entitiesRenderer.entityViews.add(new EntityView(gameResources.getModel(EntityType.SLIME), living));
+        //world.collisionsWorld.addCollisionObject(living.body);
     }
 }

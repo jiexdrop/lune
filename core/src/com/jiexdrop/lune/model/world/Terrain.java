@@ -38,8 +38,6 @@ public class Terrain {
         }
     }
 
-    Vector3 res = new Vector3(0, 0, 0);
-
     public void update(Vector3 pos) {
         activeChunk = Helpers.playerPosToChunkPos(pos);
 
@@ -73,7 +71,7 @@ public class Terrain {
     public void moveEntity(Entity entity, float deltaTime, float x, float z) {
 
     }
-    
+
     public ItemType getVoxel(Vector3 pos) {
         Vector3 chunkPos = Helpers.playerPosToChunkPos(pos);
         if (!chunks.containsKey(chunkPos)) {

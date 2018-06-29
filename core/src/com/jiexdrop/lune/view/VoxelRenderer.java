@@ -14,17 +14,9 @@ import com.badlogic.gdx.utils.Pool;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.world.Helpers;
 import com.jiexdrop.lune.model.world.Terrain;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class VoxelRenderer implements RenderableProvider {
-
-
-
-    public final HashMap<Vector3, VoxelMesh> meshes = new HashMap<Vector3, VoxelMesh>();
 
     public int renderedChunks;
 
@@ -36,12 +28,18 @@ public class VoxelRenderer implements RenderableProvider {
 
     private PerspectiveCamera camera;
 
-    private Terrain terrain;
+    private final World world;
 
-    public VoxelRenderer(GameResources gameResources, Terrain terrain, PerspectiveCamera camera) {
+    private final Terrain terrain;
+
+    public HashMap<Vector3, VoxelMesh> meshes;
+
+    public VoxelRenderer(GameResources gameResources, World world, PerspectiveCamera camera) {
         this.gameResources = gameResources;
-        this.terrain = terrain;
+        this.world = world;
+        this.terrain = world.terrain;
         this.camera = camera;
+        this.meshes = world.meshes;
     }
 
     //        if (GameVariables.DEBUG) {
@@ -61,7 +59,7 @@ public class VoxelRenderer implements RenderableProvider {
                     Runnable runnable = new Runnable() {
                         @Override
                         public void run() {
-                            mesh.update(terrain, chunk, gameResources);
+                            mesh.update(world, terrain, chunk, gameResources);
                         }
                     };
 
@@ -70,6 +68,7 @@ public class VoxelRenderer implements RenderableProvider {
                 }
             } else {
                 if (meshes.containsKey(chunkPos)) {
+                    world.removeGroundMesh(meshes.get(chunkPos));
                     meshes.get(chunkPos).dispose();
                     meshes.remove(chunkPos);
                     terrain.dirty.add(chunkPos);
@@ -154,12 +153,15 @@ public class VoxelRenderer implements RenderableProvider {
     }
 
     protected boolean isVisible(Vector3 position) {
-        if(!Helpers.intersect(position, GameVariables.CAMERA_FAR/2, camera.position, 1)){ // Maximum distance
+        if (!Helpers.intersect(position, GameVariables.CAMERA_FAR / 2, camera.position, 1)) { // Maximum distance
             return false;
         }
-
         return camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
     }
 
 
+
+    public PerspectiveCamera getCamera() {
+        return camera;
+    }
 }
