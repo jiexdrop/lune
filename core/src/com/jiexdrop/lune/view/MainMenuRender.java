@@ -4,6 +4,16 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.LuneGame;
 
 
@@ -16,10 +26,38 @@ public class MainMenuRender implements Screen {
 
     GameRender gameRender;
 
+    TextField textField;
+
+    private Stage stage;
+
     public MainMenuRender(LuneGame main) {
         this.main = main;
-        Gdx.input.setInputProcessor(new MenuInputProcessor());
+        stage = new Stage(new ScreenViewport());
+        Gdx.input.setInputProcessor(stage);
+
+        Table table = new Table();
+        table.setFillParent(true);
+        textField = new TextField(""+GameVariables.SEED, main.textures.getTextFieldStyle());
+        table.add(textField).width(124).height(64);
+        Button button = new Button( main.textures.getSlotButtonStyle());
+        button.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                init();
+            }
+        });
+
+        table.add(button).width(64).height(64).row();
+        stage.addActor(table);
+
     }
+
+    public void init(){
+        GameVariables.SEED = Integer.parseInt(textField.getText());
+        gameRender = new GameRender(main);
+        main.setScreen(gameRender);
+    }
+
 
     @Override
     public void show() {
@@ -28,13 +66,14 @@ public class MainMenuRender implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0,0,0,0);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        stage.act(delta);
+        stage.draw();
     }
 
     @Override
     public void resize(int width, int height) {
-
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -54,51 +93,7 @@ public class MainMenuRender implements Screen {
 
     @Override
     public void dispose() {
-
+        stage.dispose();
     }
 
-    private class MenuInputProcessor implements InputProcessor{
-
-        @Override
-        public boolean keyDown(int keycode) {
-            return false;
-        }
-
-        @Override
-        public boolean keyUp(int keycode) {
-            return false;
-        }
-
-        @Override
-        public boolean keyTyped(char character) {
-            return false;
-        }
-
-        @Override
-        public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-            gameRender = new GameRender(main);
-            main.setScreen(gameRender);
-            return false;
-        }
-
-        @Override
-        public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-            return false;
-        }
-
-        @Override
-        public boolean touchDragged(int screenX, int screenY, int pointer) {
-            return false;
-        }
-
-        @Override
-        public boolean mouseMoved(int screenX, int screenY) {
-            return false;
-        }
-
-        @Override
-        public boolean scrolled(int amount) {
-            return false;
-        }
-    }
 }

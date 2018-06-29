@@ -18,6 +18,8 @@ package com.jiexdrop.lune.model.world;
  */
 
 
+import com.jiexdrop.lune.GameVariables;
+
 import java.util.Random;
 
 public class SimplexNoise {  // Simplex noise in 2D, 3D and 4D
@@ -41,7 +43,7 @@ public class SimplexNoise {  // Simplex noise in 2D, 3D and 4D
 
 
     static {
-        Random random = new Random();
+        Random random = new Random(GameVariables.SEED);
         for(int i=0; i<512; i++) {
             p[i] = (short) random.nextInt(255);
         }

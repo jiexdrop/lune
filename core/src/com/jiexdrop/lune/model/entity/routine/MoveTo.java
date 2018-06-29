@@ -49,6 +49,6 @@ public class MoveTo extends Routine {
 
         Vector3 direction = destination.cpy().sub(entity.getX(), entity.getY(), entity.getZ()).nor();
 
-        world.terrain.moveEntity(entity, world.deltaTime, direction.x, direction.z);
+        world.moveEntity(entity, world.deltaTime, direction.x, direction.z);
     }
 }

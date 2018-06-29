@@ -1,6 +1,8 @@
 package com.jiexdrop.lune.view;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
@@ -10,6 +12,7 @@ import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
@@ -138,6 +141,7 @@ public class World {
 //            collisionsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
             collisionsWorld = new btDiscreteDynamicsWorld(dispatcher, btSweep3, solver, collisionConfig);
             collisionsWorld.setGravity(GameVariables.GRAVITY);
+
         }
 
         player = new Player();
@@ -148,7 +152,10 @@ public class World {
 
 
         worldInternalTickCallback = new WorldInternalTickCallback(collisionsWorld);
-        collisionsWorld.setDebugDrawer(debugDrawer = new DebugDrawer());
+
+        if (GameVariables.DEBUG && Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            collisionsWorld.setDebugDrawer(debugDrawer = new DebugDrawer());
+        }
 
 
 
@@ -181,7 +188,7 @@ public class World {
 
         Helpers.executorService.submit(runnable);
 
-        if (GameVariables.DEBUG) {
+        if (GameVariables.DEBUG && Gdx.app.getType() == Application.ApplicationType.Desktop) {
             Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
             debugDrawer.getShapeRenderer().setProjectionMatrix(camera.combined);
             debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawAabb);
@@ -205,6 +212,19 @@ public class World {
         collisionsWorld.performDiscreteCollisionDetection();
 
         GameVariables.ENTITIES = entitiesRenderer.entityViews.size;
+    }
+
+
+    public void movePlayer(float deltaTime, float x, float z) {
+        Vector3 playerMovement = new Vector3(x, 0, -z);
+        playerMovement.rotate(player.getAngle()-90, 0, 1, 0); //FIXME
+        playerMovement.x *= 0.1f;
+        playerMovement.z *= 0.1f;
+        characterController.setWalkDirection(playerMovement);
+    }
+
+    public void moveEntity(Entity entity, float deltaTime, float x, float z) {
+        //characterController.setWalkDirection(new Vector3(x, 0, z));
     }
 
     class WorldInternalTickCallback extends InternalTickCallback {
@@ -281,9 +301,10 @@ public class World {
 
         playerGhostObject.setCollisionShape(playerShape);
         playerGhostObject.setCollisionFlags(btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT);
-        characterController = new btKinematicCharacterController(playerGhostObject, playerShape, 0.25f);
+        characterController = new btKinematicCharacterController(playerGhostObject, playerShape, 1f);
 
         characterController.setGravity(GameVariables.GRAVITY);
+
 
 
         collisionsWorld.addCollisionObject(playerGhostObject,

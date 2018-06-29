@@ -95,7 +95,7 @@ public class UserInterface extends Stage {
     public void draw(){
         super.draw();
 
-        world.terrain.moveEntity(world.player, world.deltaTime, -touchpad.getKnobPercentX(), touchpad.getKnobPercentY());
+        world.movePlayer(world.deltaTime, touchpad.getKnobPercentX(), touchpad.getKnobPercentY());
 
         if(debugListener.count == 5){
             debugListener.count = 0;
@@ -112,6 +112,7 @@ public class UserInterface extends Stage {
                     + "\nRENDERED_VERTICES: " + GameVariables.RENDERED_VERTICES
                     + "\nRENDERED_INDICES: " + GameVariables.RENDERED_INDICES
                     + "\nPLAYER_HEALTH: " + GameVariables.PLAYER_HEALTH
+                    + "\nSEED:" + GameVariables.SEED
                     + "\nHOLD_TIME:" + GameVariables.HOLD_TIME);
         }
         else {

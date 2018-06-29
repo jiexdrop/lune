@@ -68,10 +68,6 @@ public class Terrain {
         dirty.add(chunkPos.cpy().add(VoxelChunk.Face.RIGHT.pos));
     }
 
-    public void moveEntity(Entity entity, float deltaTime, float x, float z) {
-
-    }
-
     public ItemType getVoxel(Vector3 pos) {
         Vector3 chunkPos = Helpers.playerPosToChunkPos(pos);
         if (!chunks.containsKey(chunkPos)) {

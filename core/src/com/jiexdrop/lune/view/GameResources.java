@@ -2,6 +2,7 @@ package com.jiexdrop.lune.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -21,6 +22,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
@@ -243,6 +245,18 @@ public class GameResources {
         imageTextButtonStyle.imageUp = new TextureRegionDrawable(getTouchPadKnobTexture());
 
         return imageTextButtonStyle;
+    }
+
+    public TextField.TextFieldStyle getTextFieldStyle() {
+        TextureRegionDrawable buttonBackgroundUp = new TextureRegionDrawable(getSlotTexture());
+        TextureRegionDrawable buttonBackgroundChecked = new TextureRegionDrawable(getSlotOverlayTexture());
+        TextField.TextFieldStyle textFieldStyle = new TextField.TextFieldStyle();
+
+        textFieldStyle.font = font;
+
+        textFieldStyle.fontColor = Color.WHITE;
+
+        return textFieldStyle;
     }
 
     public ImageButton.ImageButtonStyle getInventoryButtonStyle() {

@@ -232,6 +232,8 @@ public class GameVariables {
 
     public static int GAMEMODE = 0;
 
+    public static int SEED = (int) (Math.random() * Math.pow(2, 20));
+
     //DEBUG
     public static boolean DEBUG = true;
 
