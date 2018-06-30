@@ -230,6 +230,8 @@ public class GameVariables {
 
     public static int RENDERED_MESHES;
 
+    public static int COLLISION_MESHES;
+
     public static int GAMEMODE = 0;
 
     public static int SEED = (int) (Math.random() * Math.pow(2, 20));

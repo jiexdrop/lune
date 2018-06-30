@@ -132,7 +132,7 @@ public class World {
 
         if (collisionConfig == null || dispatcher == null || rigidBodies==null || solver == null || collisionsWorld == null || meshes == null || worldInternalTickCallback == null) {
             Bullet.init(true, true);
-            btSweep3 = new com.badlogic.gdx.physics.bullet.collision.btAxisSweep3(new Vector3(-1000f, -1000f, -1000f), new Vector3(1000, 1000, 1000));
+            btSweep3 = new com.badlogic.gdx.physics.bullet.collision.btAxisSweep3(new Vector3(-1f, -1f, -1f), new Vector3(1, 1, 1));
             modelBuilder = new ModelBuilder();
             collisionConfig = new btDefaultCollisionConfiguration();
             dispatcher = new btCollisionDispatcher(collisionConfig);
@@ -241,7 +241,6 @@ public class World {
 
 
     public void addGroundMesh(VoxelMesh mesh, Vector3 position) {
-
         synchronized (syncObject) {
             modelBuilder.begin();
             MeshPart part = modelBuilder.part(UUID.randomUUID().toString(), mesh, GL20.GL_TRIANGLES, null);
@@ -266,12 +265,19 @@ public class World {
 
             btRigidBody groundRigidBody = new btRigidBody(groundBodyConstructionInfo);
 
-            collisionsWorld.addRigidBody(groundRigidBody,(short) btBroadphaseProxy.CollisionFilterGroups.StaticFilter,
+            if(rigidBodies.get(mesh)!=null && rigidBodies.get(mesh).isInWorld() && !rigidBodies.get(mesh).isDisposed()) {
+                collisionsWorld.removeRigidBody(rigidBodies.get(mesh));
+                rigidBodies.get(mesh).dispose();
+            }
+
+            collisionsWorld.addRigidBody(groundRigidBody,
+                    (short) btBroadphaseProxy.CollisionFilterGroups.StaticFilter,
                     (short) (btBroadphaseProxy.CollisionFilterGroups.CharacterFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
             bodies.add(groundRigidBody);
 
             rigidBodies.put(mesh, groundRigidBody);
 
+            GameVariables.COLLISION_MESHES = collisionsWorld.getNumCollisionObjects();
         }
     }
 
@@ -281,10 +287,10 @@ public class World {
             if (btRigidBody != null) {
                 collisionsWorld.removeRigidBody(btRigidBody);
                 btRigidBody.dispose();
+                rigidBodies.remove(mesh);
             }
-
-            rigidBodies.remove(mesh);
         }
+
     }
 
     public void addPlayerMesh(PerspectiveCamera camera) {

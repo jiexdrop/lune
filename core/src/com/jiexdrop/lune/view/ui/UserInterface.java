@@ -111,6 +111,7 @@ public class UserInterface extends Stage {
                     + "\nRENDERED_BLOCKS: " + GameVariables.RENDERED_BLOCKS
                     + "\nRENDERED_VERTICES: " + GameVariables.RENDERED_VERTICES
                     + "\nRENDERED_INDICES: " + GameVariables.RENDERED_INDICES
+                    + "\nCOLLISION_MESHES: " + GameVariables.COLLISION_MESHES
                     + "\nPLAYER_HEALTH: " + GameVariables.PLAYER_HEALTH
                     + "\nSEED:" + GameVariables.SEED
                     + "\nHOLD_TIME:" + GameVariables.HOLD_TIME);
