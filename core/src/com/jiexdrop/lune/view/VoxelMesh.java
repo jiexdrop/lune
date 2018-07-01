@@ -6,12 +6,14 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.IndexData;
 import com.badlogic.gdx.graphics.glutils.VertexData;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ShortArray;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.world.Terrain;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class VoxelMesh extends Mesh {
@@ -42,17 +44,28 @@ public class VoxelMesh extends Mesh {
         super(type, isStatic, maxVertices, maxIndices, attributes);
     }
 
-    public void update(World world, Terrain terrain, VoxelChunk chunk, GameResources gameResources) {
+    public synchronized void update(World world, Terrain terrain, VoxelChunk chunk, GameResources gameResources) {
+
+
+
         chunk.calculateVertices(terrain, vertices, indices, gameResources);
         setVertices(vertices.toArray());
         setIndices(indices.toArray());
 
-        if(getNumVertices() > 0 && getNumIndices()>0) world.addGroundMesh(this, chunk.position);
+        if (getNumVertices() > 0 && getNumIndices() > 0) {
+            world.removeGroundMesh(this);
+            world.addGroundMesh(this, chunk.position);
+        }
+
 
         vertices.clear();
         indices.clear();
         vertices.shrink();
         indices.shrink();
+
+
+
     }
+
 
 }

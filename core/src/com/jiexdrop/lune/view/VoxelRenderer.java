@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Pool;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.world.Helpers;
 import com.jiexdrop.lune.model.world.Terrain;
+
 import java.util.HashMap;
 
 public class VoxelRenderer implements RenderableProvider {
@@ -46,36 +47,36 @@ public class VoxelRenderer implements RenderableProvider {
     //            debug.put(chunkPos, Helpers.randomColorMaterial());
     //        }
 
-    public void update(){
-        for (Vector3 chunkPos : terrain.chunks.keySet()) {
-            if (isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
-                final VoxelMesh mesh = meshes.get(chunkPos);
-                if(mesh == null) continue;
+    public synchronized void update() {
+        for (final Vector3 chunkPos : terrain.chunks.keySet()) {
 
-                final VoxelChunk chunk = terrain.chunks.get(chunkPos);
+            final VoxelMesh mesh = meshes.get(chunkPos);
+            if (mesh == null) continue;
 
-                if (terrain.dirty.contains(chunkPos)) {
-                    //mesh.update(terrain, chunk, gameResources);
-                    Runnable runnable = new Runnable() {
-                        @Override
-                        public void run() {
-                            mesh.update(world, terrain, chunk, gameResources);
-                        }
-                    };
+            final VoxelChunk chunk = terrain.chunks.get(chunkPos);
 
-                    Helpers.executorService.submit(runnable);
-                    terrain.dirty.remove(chunkPos);
-                }
-            } else {
-                if (meshes.containsKey(chunkPos)) {
-                    world.removeGroundMesh(meshes.get(chunkPos));
-                    meshes.get(chunkPos).dispose();
-                    meshes.remove(chunkPos);
-                    terrain.dirty.add(chunkPos);
-                }
+
+            if (!isVisible(Helpers.chunkPosToPlayerPos(chunkPos)) && !Helpers.playerPosToChunkPos(camera.position).equals(chunkPos)) {
+                world.removeGroundMesh(mesh);
+                mesh.dispose(); //TODO: error the mesh has already been disposed
+
             }
-        }
 
+            if (terrain.dirty.contains(chunkPos)) {
+
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        mesh.update(world, terrain, chunk, gameResources);
+                    }
+                };
+
+                Helpers.executorService.submit(runnable);
+                terrain.dirty.remove(chunkPos);
+            }
+
+
+        }
 
     }
 
@@ -98,7 +99,7 @@ public class VoxelRenderer implements RenderableProvider {
                 }
 
                 final VoxelMesh mesh = meshes.get(chunkPos);
-                if(mesh == null) continue;
+                if (mesh == null) continue;
 
                 //final VoxelChunk chunk = terrain.chunks.get(chunkPos);
 
@@ -118,7 +119,6 @@ public class VoxelRenderer implements RenderableProvider {
         GameVariables.RENDERED_BLOCKS = totalBlocks;
         GameVariables.RENDERED_MESHES = meshes.size();
     }
-
 
 
     private void addMeshToRenderables(VoxelMesh mesh, Pool<Renderable> pool, Vector3 chunkPos, Array<Renderable> renderables) {
@@ -153,12 +153,10 @@ public class VoxelRenderer implements RenderableProvider {
     }
 
     protected boolean isVisible(Vector3 position) {
-        if (!Helpers.intersect(position, GameVariables.CAMERA_FAR / 2, camera.position, 1)) { // Maximum distance
-            return false;
-        }
-        return camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
+        // Maximum distance
+        return Helpers.intersect(position, GameVariables.CAMERA_FAR / 2, camera.position, 1);
+        //return camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
     }
-
 
 
     public PerspectiveCamera getCamera() {

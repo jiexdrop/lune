@@ -98,8 +98,6 @@ public class World {
 
     private ArrayList<btRigidBody> bodies = new ArrayList<btRigidBody>();
 
-    private HashMap<Mesh, btRigidBody> rigidBodies = new HashMap<Mesh, btRigidBody>();
-
     private HashMap<EntityView, btRigidBody> entitiesBodies = new HashMap<EntityView, btRigidBody>();
 
     // Player
@@ -110,13 +108,15 @@ public class World {
 
     private btKinematicCharacterController characterController;
 
-    private  Array<btKinematicCharacterController> controllers = new Array<btKinematicCharacterController>();
+    private Array<btKinematicCharacterController> controllers = new Array<btKinematicCharacterController>();
 
     private btAxisSweep3 btSweep3;
 
+    private HashMap<VoxelMesh, btRigidBody> groundMeshes = new HashMap<VoxelMesh, btRigidBody>();
+
 
     private WorldInternalTickCallback worldInternalTickCallback;
-    private final Object syncObject = new Object();
+
 
     private DebugDrawer debugDrawer;
 
@@ -130,9 +130,9 @@ public class World {
 
         terrain = new Terrain();
 
-        if (collisionConfig == null || dispatcher == null || rigidBodies==null || solver == null || collisionsWorld == null || meshes == null || worldInternalTickCallback == null) {
+        if (collisionConfig == null || dispatcher == null || solver == null || collisionsWorld == null || meshes == null || worldInternalTickCallback == null) {
             Bullet.init(true, true);
-            btSweep3 = new com.badlogic.gdx.physics.bullet.collision.btAxisSweep3(new Vector3(-1f, -1f, -1f), new Vector3(1, 1, 1));
+            btSweep3 = new btAxisSweep3(new Vector3(-1000f, -1000f, -1000f), new Vector3(1000, 1000, 1000));
             modelBuilder = new ModelBuilder();
             collisionConfig = new btDefaultCollisionConfiguration();
             dispatcher = new btCollisionDispatcher(collisionConfig);
@@ -158,7 +158,6 @@ public class World {
         }
 
 
-
     }
 
 
@@ -170,6 +169,7 @@ public class World {
     };
 
     private Vector3 tmp = new Vector3();
+
     public void update(float delta) {
         deltaTime = delta;
 
@@ -200,7 +200,7 @@ public class World {
 
         populate();
 
-        for (Map.Entry<EntityView, btRigidBody> object : entitiesBodies.entrySet() ) {
+        for (Map.Entry<EntityView, btRigidBody> object : entitiesBodies.entrySet()) {
             object.getValue().getWorldTransform().getTranslation(tmp);
             object.getKey().entity.getPosition().set(tmp);
 
@@ -211,13 +211,14 @@ public class World {
         collisionsWorld.stepSimulation(delta, 5, GameVariables.TIME_STEP);
         collisionsWorld.performDiscreteCollisionDetection();
 
+        GameVariables.COLLISION_MESHES = collisionsWorld.getNumCollisionObjects();
         GameVariables.ENTITIES = entitiesRenderer.entityViews.size;
     }
 
 
     public void movePlayer(float deltaTime, float x, float z) {
         Vector3 playerMovement = new Vector3(x, 0, -z);
-        playerMovement.rotate(player.getAngle()-90, 0, 1, 0); //FIXME
+        playerMovement.rotate(player.getAngle() - 90, 0, 1, 0); //FIXME
         playerMovement.x *= 0.1f;
         playerMovement.z *= 0.1f;
         characterController.setWalkDirection(playerMovement);
@@ -240,57 +241,47 @@ public class World {
     }
 
 
-    public void addGroundMesh(VoxelMesh mesh, Vector3 position) {
-        synchronized (syncObject) {
-            modelBuilder.begin();
-            MeshPart part = modelBuilder.part(UUID.randomUUID().toString(), mesh, GL20.GL_TRIANGLES, null);
-            modelBuilder.end();
+    public synchronized void addGroundMesh(VoxelMesh mesh, Vector3 position) {
 
-            Array<MeshPart> meshPart = new Array<MeshPart>();
-            meshPart.add(part);
+        modelBuilder.begin();
+        MeshPart part = modelBuilder.part(UUID.randomUUID().toString(), mesh, GL20.GL_TRIANGLES, null);
+        modelBuilder.end();
+
+        Array<MeshPart> meshPart = new Array<MeshPart>();
+        meshPart.add(part);
 
 
-            btBvhTriangleMeshShape btBvhTriangleMeshShape = new btBvhTriangleMeshShape(meshPart);
-            shapes.add(btBvhTriangleMeshShape);
+        btBvhTriangleMeshShape btBvhTriangleMeshShape = new btBvhTriangleMeshShape(meshPart);
+        shapes.add(btBvhTriangleMeshShape);
 
-            btMotionState groundMotionState = new btDefaultMotionState();
-            Matrix4 transform = new Matrix4().setToTranslation(Helpers.chunkPosToPlayerPos(position));
-            //System.out.println(transform);
-            groundMotionState.setWorldTransform(transform);
-            states.add(groundMotionState);
+        btMotionState groundMotionState = new btDefaultMotionState();
+        Matrix4 transform = new Matrix4().setToTranslation(Helpers.chunkPosToPlayerPos(position));
+        //System.out.println(transform);
+        groundMotionState.setWorldTransform(transform);
+        states.add(groundMotionState);
 
-            btRigidBody.btRigidBodyConstructionInfo groundBodyConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(0, groundMotionState, btBvhTriangleMeshShape, new Vector3(0, 0, 0));
-            groundBodyConstructionInfo.setFriction(0);
-            constructions.add(groundBodyConstructionInfo);
+        btRigidBody.btRigidBodyConstructionInfo groundBodyConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(0, groundMotionState, btBvhTriangleMeshShape, new Vector3(0, 0, 0));
+        groundBodyConstructionInfo.setFriction(0);
+        constructions.add(groundBodyConstructionInfo);
 
-            btRigidBody groundRigidBody = new btRigidBody(groundBodyConstructionInfo);
+        btRigidBody meshRigidBody = new btRigidBody(groundBodyConstructionInfo);
 
-            if(rigidBodies.get(mesh)!=null && rigidBodies.get(mesh).isInWorld() && !rigidBodies.get(mesh).isDisposed()) {
-                collisionsWorld.removeRigidBody(rigidBodies.get(mesh));
-                rigidBodies.get(mesh).dispose();
-            }
+        collisionsWorld.addRigidBody(meshRigidBody,
+                (short) btBroadphaseProxy.CollisionFilterGroups.StaticFilter,
+                (short) (btBroadphaseProxy.CollisionFilterGroups.CharacterFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
 
-            collisionsWorld.addRigidBody(groundRigidBody,
-                    (short) btBroadphaseProxy.CollisionFilterGroups.StaticFilter,
-                    (short) (btBroadphaseProxy.CollisionFilterGroups.CharacterFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
-            bodies.add(groundRigidBody);
+        groundMeshes.put(mesh, meshRigidBody);
 
-            rigidBodies.put(mesh, groundRigidBody);
-
-            GameVariables.COLLISION_MESHES = collisionsWorld.getNumCollisionObjects();
-        }
     }
 
-    public void removeGroundMesh(VoxelMesh mesh){
-        synchronized (syncObject) {
-            btRigidBody btRigidBody = rigidBodies.get(mesh);
-            if (btRigidBody != null) {
-                collisionsWorld.removeRigidBody(btRigidBody);
-                btRigidBody.dispose();
-                rigidBodies.remove(mesh);
-            }
-        }
+    public synchronized void removeGroundMesh(VoxelMesh mesh) {
+        btRigidBody collisionMesh = groundMeshes.get(mesh);
+        if (collisionMesh != null) {
+            collisionsWorld.removeRigidBody(collisionMesh);
+            collisionMesh.dispose();
 
+            //groundMeshes.remove(mesh);
+        }
     }
 
     public void addPlayerMesh(PerspectiveCamera camera) {
@@ -302,7 +293,7 @@ public class World {
         btSweep3.getOverlappingPairCache().setInternalGhostPairCallback(new btGhostPairCallback());
 
 
-        playerShape = new btBoxShape(new Vector3(0.3f, 0.3f,0.3f));
+        playerShape = new btBoxShape(new Vector3(0.3f, 0.3f, 0.3f));
 
 
         playerGhostObject.setCollisionShape(playerShape);
@@ -312,16 +303,14 @@ public class World {
         characterController.setGravity(GameVariables.GRAVITY);
 
 
-
         collisionsWorld.addCollisionObject(playerGhostObject,
-                (short)btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
-                (short)(btBroadphaseProxy.CollisionFilterGroups.StaticFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
+                (short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
+                (short) (btBroadphaseProxy.CollisionFilterGroups.StaticFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
         collisionsWorld.addAction(characterController);
 
 
         controllers.add(characterController);
     }
-
 
 
     public void dropBlock(Vector3 pos, ItemType itemType) {

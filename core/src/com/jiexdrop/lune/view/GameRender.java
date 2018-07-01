@@ -99,7 +99,7 @@ public class GameRender implements Screen {
 
         Gdx.input.setInputProcessor(inputMultiplexer);
 
-        world.addPlayerMesh(voxelRenderer.getCamera());
+        world.addPlayerMesh(actualCamera);
 
     }
 
