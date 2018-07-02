@@ -313,7 +313,7 @@ public class World {
     }
 
 
-    public void dropBlock(Vector3 pos, ItemType itemType) {
+    public synchronized void dropBlock(Vector3 pos, ItemType itemType) {
         //System.out.println(itemType);
         Entity e = new Item(itemType, pos.cpy().add(1f, 1f, 1f));
         e.setRoutine(new ToInventory(player));

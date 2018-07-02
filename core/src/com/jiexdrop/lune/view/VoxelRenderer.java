@@ -52,31 +52,34 @@ public class VoxelRenderer implements RenderableProvider {
 
             final VoxelMesh mesh = meshes.get(chunkPos);
             if (mesh == null) continue;
+            if (isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
 
-            final VoxelChunk chunk = terrain.chunks.get(chunkPos);
+                final VoxelChunk chunk = terrain.chunks.get(chunkPos);
 
 
-            if (!isVisible(Helpers.chunkPosToPlayerPos(chunkPos)) && !Helpers.playerPosToChunkPos(camera.position).equals(chunkPos)) {
-                world.removeGroundMesh(mesh);
-                mesh.dispose(); //TODO: error the mesh has already been disposed
+                if (terrain.dirty.contains(chunkPos)) {
+                    mesh.update(world, terrain, chunk, gameResources);
+//TODO multithreads
+//                Runnable runnable = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mesh.update(world, terrain, chunk, gameResources);
+//                   }
+//                };
+//
+//                Helpers.executorService.submit(runnable);
+                    terrain.dirty.remove(chunkPos);
+                }
+            } else {
 
+                world.removeGroundMesh(meshes.get(chunkPos));
+                meshes.get(chunkPos).dispose();
+                meshes.remove(chunkPos);
+                terrain.dirty.add(chunkPos);
             }
-
-            if (terrain.dirty.contains(chunkPos)) {
-
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        mesh.update(world, terrain, chunk, gameResources);
-                    }
-                };
-
-                Helpers.executorService.submit(runnable);
-                terrain.dirty.remove(chunkPos);
-            }
-
 
         }
+
 
     }
 
@@ -154,8 +157,7 @@ public class VoxelRenderer implements RenderableProvider {
 
     protected boolean isVisible(Vector3 position) {
         // Maximum distance
-        return Helpers.intersect(position, GameVariables.CAMERA_FAR / 2, camera.position, 1);
-        //return camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
+        return Helpers.intersect(position, GameVariables.CAMERA_FAR / 2, camera.position, 1) && camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
     }
 
 
