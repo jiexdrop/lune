@@ -26,6 +26,7 @@ import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.controller.DebugInput;
 import com.jiexdrop.lune.controller.KeyboardInput;
 import com.jiexdrop.lune.controller.WorldInput;
+import com.jiexdrop.lune.model.world.Helpers;
 import com.jiexdrop.lune.view.ui.UserInterface;
 
 import java.nio.FloatBuffer;
@@ -74,9 +75,10 @@ public class GameRender implements Screen {
 
         actualCamera = camera;
 
-        world = new World(game.textures, entitiesRenderer, voxelRenderer, actualCamera);
+        world = new World(game.textures, entitiesRenderer, actualCamera);
 
         voxelRenderer = new VoxelRenderer(game.textures, world, actualCamera);
+        world.setVoxelRenderer(voxelRenderer);
 
         worldInput = new WorldInput(game, world, actualCamera);
         keyboardInput = new KeyboardInput(game, world, debugCamera);
@@ -100,8 +102,8 @@ public class GameRender implements Screen {
         Gdx.input.setInputProcessor(inputMultiplexer);
 
         world.addPlayerMesh(actualCamera);
-
     }
+
 
 
     @Override
@@ -109,11 +111,11 @@ public class GameRender implements Screen {
         Gdx.gl.glClearColor(GameVariables.WATER.r, GameVariables.WATER.g, GameVariables.WATER.b, GameVariables.WATER.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
+        voxelRenderer.update();
+
         world.update(Math.min(Gdx.graphics.getDeltaTime(), GameVariables.TIME_STEP));
         userInterface.act(Math.min(Gdx.graphics.getDeltaTime(), GameVariables.TIME_STEP));
 
-
-        voxelRenderer.update();
 
         if(GameVariables.GAMEMODE==1) {
 
@@ -121,7 +123,7 @@ public class GameRender implements Screen {
                 actualCamera = debugCamera;
                 inputMultiplexer.removeProcessor(worldInput);
                 inputMultiplexer.addProcessor(debugInput);
-                actualCamera.position.set(world.player.getX(), world.player.getY() + world.player.getSize().y, world.player.getZ());
+                actualCamera.position.set(world.player.getX(), world.player.getY() + 2, world.player.getZ());
             }
             //world.player.getPosition().set(actualCamera.position.x, actualCamera.position.y  - world.player.getSize().y, actualCamera.position.z);
             //Vector2 camAngle = new Vector2(actualCamera.direction.x, actualCamera.direction.z);
@@ -136,7 +138,7 @@ public class GameRender implements Screen {
                 inputMultiplexer.removeProcessor(debugInput);
             }
 
-            actualCamera.position.set(world.player.getX(), world.player.getY() + world.player.getSize().y, world.player.getZ());
+            actualCamera.position.set(world.player.getX(), world.player.getY() + 2, world.player.getZ());
         }
 
         actualCamera.update();

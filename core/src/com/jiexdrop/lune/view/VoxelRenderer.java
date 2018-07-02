@@ -1,6 +1,7 @@
 
 package com.jiexdrop.lune.view;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -16,6 +17,7 @@ import com.jiexdrop.lune.model.world.Helpers;
 import com.jiexdrop.lune.model.world.Terrain;
 
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class VoxelRenderer implements RenderableProvider {
 
@@ -35,6 +37,8 @@ public class VoxelRenderer implements RenderableProvider {
 
     public HashMap<Vector3, VoxelMesh> meshes;
 
+    public ConcurrentHashMap<Vector3, VoxelMesh> meshesToUpdate = new ConcurrentHashMap<Vector3, VoxelMesh>();
+
     public VoxelRenderer(GameResources gameResources, World world, PerspectiveCamera camera) {
         this.gameResources = gameResources;
         this.world = world;
@@ -44,45 +48,60 @@ public class VoxelRenderer implements RenderableProvider {
     }
 
     //        if (GameVariables.DEBUG) {
-    //            debug.put(chunkPos, Helpers.randomColorMaterial());
+    //            debug.put(chunkPos, HelpvoxelMeshers.randomColorMaterial());
     //        }
 
-    public synchronized void update() {
+    public void update() {
         for (final Vector3 chunkPos : terrain.chunks.keySet()) {
 
             final VoxelMesh mesh = meshes.get(chunkPos);
             if (mesh == null) continue;
+            final VoxelChunk chunk = terrain.chunks.get(chunkPos);
+
             if (isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
 
-                final VoxelChunk chunk = terrain.chunks.get(chunkPos);
-
-
                 if (terrain.dirty.contains(chunkPos)) {
-                    mesh.update(world, terrain, chunk, gameResources);
-//TODO multithreads
-//                Runnable runnable = new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        mesh.update(world, terrain, chunk, gameResources);
-//                   }
-//                };
-//
-//                Helpers.executorService.submit(runnable);
+                    //mesh.update(world, terrain, chunk, gameResources);
+
+                    Runnable updateTerrain = new Runnable() {
+                        @Override
+                        public void run() {
+                            mesh.update(terrain, chunk, gameResources);
+                            meshesToUpdate.put(chunkPos,mesh);
+                        }
+                    };
+
+
+                    Gdx.app.postRunnable(updateTerrain);
                     terrain.dirty.remove(chunkPos);
                 }
-            } else {
-
-                world.removeGroundMesh(meshes.get(chunkPos));
-                meshes.get(chunkPos).dispose();
-                meshes.remove(chunkPos);
-                terrain.dirty.add(chunkPos);
             }
 
         }
-
-
     }
 
+    public synchronized void cleanFar(){
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                int cleaned_meshes = 0;
+                for (final Vector3 chunkPos : terrain.chunks.keySet()) {
+                    final VoxelMesh mesh = meshes.get(chunkPos);
+                    if (mesh == null) continue;
+                    if (!isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
+                        cleaned_meshes++;
+                        world.removeGroundMesh(mesh);
+                        mesh.dispose();
+                        meshes.remove(chunkPos);
+                        meshesToUpdate.remove(chunkPos);
+                        terrain.dirty.add(chunkPos);
+                    }
+                }
+                GameVariables.CLEANED_MESHES = cleaned_meshes;
+            }
+        };
+        Gdx.app.postRunnable(runnable);
+    }
 
     @Override
     public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
@@ -120,7 +139,7 @@ public class VoxelRenderer implements RenderableProvider {
         GameVariables.RENDERED_VERTICES = totalVerts;
         GameVariables.RENDERED_INDICES = totalIndices;
         GameVariables.RENDERED_BLOCKS = totalBlocks;
-        GameVariables.RENDERED_MESHES = meshes.size();
+        GameVariables.TOTAL_MESHES = meshes.size();
     }
 
 
@@ -156,12 +175,8 @@ public class VoxelRenderer implements RenderableProvider {
     }
 
     protected boolean isVisible(Vector3 position) {
-        // Maximum distance
-        return Helpers.intersect(position, GameVariables.CAMERA_FAR / 2, camera.position, 1) && camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
+        return camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
     }
 
 
-    public PerspectiveCamera getCamera() {
-        return camera;
-    }
 }

@@ -46,7 +46,7 @@ public class Terrain {
         }
     }
 
-    public synchronized void setVoxel(Vector3 pos, ItemType voxel) {
+    public void setVoxel(Vector3 pos, ItemType voxel) {
         Vector3 chunkPos = Helpers.playerPosToChunkPos(pos);
 //        if(!chunks.containsKey(chunkPos)){  // Why ?
 //            chunks.put(chunkPos, new VoxelChunk());

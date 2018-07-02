@@ -37,9 +37,10 @@ public class EntitiesRenderer implements RenderableProvider {
                 for (Renderable r:entityView.renderables) {
                     Renderable renderable = pool.obtain();
                     renderable.set(r);
+                    renderable.worldTransform.scale(entityView.entity.getSize().x, entityView.entity.getSize().y, entityView.entity.getSize().z);
                     renderable.worldTransform.rotate(new Vector3(0, 1, 0), entityView.entity.getAngle());
 
-                    renderable.worldTransform.setTranslation(entityView.entity.getPosition());
+                    renderable.worldTransform.setTranslation(entityView.entity.getPosition().cpy().add(0,0.90f,0)); //FIXME
                     renderables.add(renderable);
                 }
 

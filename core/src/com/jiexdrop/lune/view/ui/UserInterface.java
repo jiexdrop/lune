@@ -3,14 +3,11 @@ package com.jiexdrop.lune.view.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.view.World;
@@ -107,11 +104,12 @@ public class UserInterface extends Stage {
                     + "\nPLAYER_POS: " + GameVariables.PLAYER_POSITION
                     + "\nENTITIES: " + GameVariables.ENTITIES
                     + "\nVISIBLE_ENTITIES: " + GameVariables.VISIBLE_ENTITIES
-                    + "\nRENDERED_CHUNKS: " + GameVariables.RENDERED_CHUNKS + "/" + GameVariables.RENDERED_MESHES
+                    + "\nRENDERED_CHUNKS: " + GameVariables.RENDERED_CHUNKS + "/" + GameVariables.TOTAL_MESHES
                     + "\nRENDERED_BLOCKS: " + GameVariables.RENDERED_BLOCKS
                     + "\nRENDERED_VERTICES: " + GameVariables.RENDERED_VERTICES
                     + "\nRENDERED_INDICES: " + GameVariables.RENDERED_INDICES
                     + "\nCOLLISION_MESHES: " + GameVariables.COLLISION_MESHES
+                    + "\nCLEANED_MESHES: " + GameVariables.CLEANED_MESHES
                     + "\nPLAYER_HEALTH: " + GameVariables.PLAYER_HEALTH
                     + "\nSEED:" + GameVariables.SEED
                     + "\nHOLD_TIME:" + GameVariables.HOLD_TIME);

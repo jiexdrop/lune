@@ -2,17 +2,11 @@ package com.jiexdrop.lune.view;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
@@ -63,6 +57,10 @@ public class World {
     public Player player;
 
     public final Terrain terrain;
+
+    public void setVoxelRenderer(VoxelRenderer voxelRenderer) {
+        this.voxelRenderer = voxelRenderer;
+    }
 
     public VoxelRenderer voxelRenderer;
 
@@ -122,9 +120,10 @@ public class World {
 
     private PerspectiveCamera camera;
 
-    public World(GameResources gameResources, EntitiesRenderer entitiesRenderer, VoxelRenderer voxelRenderer, PerspectiveCamera camera) {
+    private int cleanFarTimer = 0;
+
+    public World(GameResources gameResources, EntitiesRenderer entitiesRenderer, PerspectiveCamera camera) {
         this.entitiesRenderer = entitiesRenderer;
-        this.voxelRenderer = voxelRenderer;
         this.gameResources = gameResources;
         this.camera = camera;
 
@@ -161,18 +160,28 @@ public class World {
     }
 
 
-    private Runnable runnable = new Runnable() {
+    private Runnable updateTerrain = new Runnable() {
         @Override
         public void run() {
             terrain.update(player.getPosition());
         }
     };
 
+
     private Vector3 tmp = new Vector3();
 
     public void update(float delta) {
         deltaTime = delta;
+        Helpers.executorService.submit(updateTerrain);
 
+        for (Map.Entry<Vector3, VoxelMesh> entry : voxelRenderer.meshesToUpdate.entrySet()) {
+            if (entry.getValue().getNumVertices() > 0 && entry.getValue().getNumIndices() > 0) {
+                removeGroundMesh(entry.getValue());
+                addGroundMesh(entry.getValue(), entry.getKey());
+            }
+        }
+
+        voxelRenderer.meshesToUpdate.clear();
 
         for (EntityView ev : entitiesRenderer.entityViews) {
             ev.entity.update(this);
@@ -186,7 +195,14 @@ public class World {
             }
         }
 
-        Helpers.executorService.submit(runnable);
+
+
+
+        cleanFarTimer++;
+        if (cleanFarTimer > 600 || GameVariables.TOTAL_MESHES > 96) {
+            voxelRenderer.cleanFar();
+            cleanFarTimer = 0;
+        }
 
         if (GameVariables.DEBUG && Gdx.app.getType() == Application.ApplicationType.Desktop) {
             Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
@@ -200,12 +216,12 @@ public class World {
 
         populate();
 
-        for (Map.Entry<EntityView, btRigidBody> object : entitiesBodies.entrySet()) {
-            object.getValue().getWorldTransform().getTranslation(tmp);
-            object.getKey().entity.getPosition().set(tmp);
-
-            object.getValue().applyCentralImpulse(object.getKey().entity.getVelocity());
-        }
+//        for (Map.Entry<EntityView, btRigidBody> object : entitiesBodies.entrySet()) {
+//            object.getValue().getWorldTransform().getTranslation(tmp);
+//            object.getKey().entity.getPosition().set(tmp);
+//
+//            object.getValue().applyCentralImpulse(object.getKey().entity.getVelocity());
+//        }
 
         playerGhostObject.getWorldTransform().getTranslation(player.getPosition());
         collisionsWorld.stepSimulation(delta, 5, GameVariables.TIME_STEP);
@@ -240,8 +256,12 @@ public class World {
         }
     }
 
+    public void resetCleanFarTimer() {
+        cleanFarTimer = 0;
+    }
 
-    public synchronized void addGroundMesh(VoxelMesh mesh, Vector3 position) {
+
+    public void addGroundMesh(VoxelMesh mesh, Vector3 position) {
 
         modelBuilder.begin();
         MeshPart part = modelBuilder.part(UUID.randomUUID().toString(), mesh, GL20.GL_TRIANGLES, null);
@@ -276,7 +296,7 @@ public class World {
 
     public synchronized void removeGroundMesh(VoxelMesh mesh) {
         btRigidBody collisionMesh = groundMeshes.get(mesh);
-        if (collisionMesh != null) {
+        if (collisionMesh != null && collisionMesh.isInWorld()) {
             collisionsWorld.removeRigidBody(collisionMesh);
             collisionMesh.dispose();
 
@@ -315,7 +335,7 @@ public class World {
 
     public synchronized void dropBlock(Vector3 pos, ItemType itemType) {
         //System.out.println(itemType);
-        Entity e = new Item(itemType, pos.cpy().add(1f, 1f, 1f));
+        Entity e = new Item(itemType, pos.cpy().add(0.25f, 0.25f, 0.25f));
         e.setRoutine(new ToInventory(player));
         EntityView ev = new EntityView(gameResources.getMiniCubeModel(itemType), e);
 

@@ -121,7 +121,7 @@ public class GameVariables {
 
     public static final Vector3 NORMAL_SIZE = new Vector3(1,1,1);
 
-    public static final Vector3 PLAYER_SIZE = new Vector3(1,2,1);
+    public static final Vector3 PLAYER_SIZE = new Vector3(0.5f,0.5f,0.5f);
 
     public static final Vector3 MAGNET_SIZE = new Vector3(1,1,1);
 
@@ -228,9 +228,11 @@ public class GameVariables {
 
     public static int RENDERED_INDICES;
 
-    public static int RENDERED_MESHES;
+    public static int TOTAL_MESHES;
 
     public static int COLLISION_MESHES;
+
+    public static int CLEANED_MESHES;
 
     public static int GAMEMODE = 0;
 
