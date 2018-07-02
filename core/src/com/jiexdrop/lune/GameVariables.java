@@ -121,6 +121,8 @@ public class GameVariables {
 
     public static final Vector3 NORMAL_SIZE = new Vector3(1,1,1);
 
+    public static final Vector3 DUCK_SIZE = new Vector3(0.5f,0.5f,0.5f);
+
     public static final Vector3 PLAYER_SIZE = new Vector3(0.5f,0.5f,0.5f);
 
     public static final Vector3 MAGNET_SIZE = new Vector3(1,1,1);

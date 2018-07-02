@@ -4,12 +4,16 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.Pool;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.entity.Player;
+
+import java.util.Map;
 
 /**
  * Created by jiexdrop on 01/09/17.
@@ -18,11 +22,12 @@ import com.jiexdrop.lune.model.entity.Player;
 public class EntitiesRenderer implements RenderableProvider {
     public int renderedEntities;
 
-    public ObjectSet<EntityView> entityViews = new ObjectSet<EntityView>();
-
     public PerspectiveCamera camera;
 
-    public EntitiesRenderer(PerspectiveCamera camera) {
+    private World world;
+
+    public EntitiesRenderer(World world, PerspectiveCamera camera) {
+        this.world = world;
         this.camera = camera;
     }
 
@@ -31,16 +36,12 @@ public class EntitiesRenderer implements RenderableProvider {
     public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
         renderedEntities = 0;
 
-        for (EntityView entityView:entityViews) {
-            if (isVisible(entityView.entity.getPosition())) {
-
-                for (Renderable r:entityView.renderables) {
+        for (Map.Entry<EntityView, btRigidBody> object : world.entitiesBodies.entrySet()) {
+            if (isVisible(object.getValue().getWorldTransform())) {
+                for (Renderable r:object.getKey().renderables) {
                     Renderable renderable = pool.obtain();
                     renderable.set(r);
-                    renderable.worldTransform.scale(entityView.entity.getSize().x, entityView.entity.getSize().y, entityView.entity.getSize().z);
-                    renderable.worldTransform.rotate(new Vector3(0, 1, 0), entityView.entity.getAngle());
-
-                    renderable.worldTransform.setTranslation(entityView.entity.getPosition().cpy().add(0,0.90f,0)); //FIXME
+                    renderable.worldTransform.set(object.getValue().getWorldTransform());
                     renderables.add(renderable);
                 }
 
@@ -51,8 +52,10 @@ public class EntitiesRenderer implements RenderableProvider {
         GameVariables.VISIBLE_ENTITIES = renderedEntities;
     }
 
-    protected boolean isVisible(Vector3 position) {
-        return camera.frustum.sphereInFrustum(position, GameVariables.CHUNK_SIZE/2f);
+    private Vector3 tmp = new Vector3();
+    protected boolean isVisible(Matrix4 worldTransform) {
+        worldTransform.getTranslation(tmp);
+        return camera.frustum.sphereInFrustum(tmp, GameVariables.CHUNK_SIZE/2f);
     }
 
 }

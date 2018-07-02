@@ -2,14 +2,17 @@ package com.jiexdrop.lune.view;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
+import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
 import com.badlogic.gdx.physics.bullet.collision.btAxisSweep3;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseInterface;
@@ -46,6 +49,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+
 /**
  * Created by jiexdrop on 14/08/17.
  */
@@ -72,7 +76,7 @@ public class World {
 
     GameResources gameResources;
 
-    Populater populater;
+    private Populater populater;
 
     public float deltaTime;
 
@@ -88,7 +92,7 @@ public class World {
 
     private ModelBuilder modelBuilder;
 
-    private ArrayList<btRigidBody.btRigidBodyConstructionInfo> constructions = new ArrayList<btRigidBody.btRigidBodyConstructionInfo>();
+    public ArrayList<btRigidBody.btRigidBodyConstructionInfo> constructions = new ArrayList<btRigidBody.btRigidBodyConstructionInfo>();
 
     private ArrayList<btCollisionShape> shapes = new ArrayList<btCollisionShape>();
 
@@ -96,13 +100,19 @@ public class World {
 
     private ArrayList<btRigidBody> bodies = new ArrayList<btRigidBody>();
 
-    private HashMap<EntityView, btRigidBody> entitiesBodies = new HashMap<EntityView, btRigidBody>();
+    public HashMap<EntityView, btRigidBody> entitiesBodies = new HashMap<EntityView, btRigidBody>(); //TODO Not public
+
+    public HashMap<btRigidBody, EntityView> bodiesEntities = new HashMap<btRigidBody, EntityView>();
+
+    public HashMap<Entity, EntityView> entitiesViews = new HashMap<Entity, EntityView>();
 
     // Player
 
     private btPairCachingGhostObject playerGhostObject;
 
     private btBoxShape playerShape;
+
+    private btRigidBody playerBody;
 
     private btKinematicCharacterController characterController;
 
@@ -140,14 +150,14 @@ public class World {
 //            collisionsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
             collisionsWorld = new btDiscreteDynamicsWorld(dispatcher, btSweep3, solver, collisionConfig);
             collisionsWorld.setGravity(GameVariables.GRAVITY);
-
+            rayResultCallback = new ClosestRayResultCallback(Vector3.Zero, Vector3.Z);
         }
 
         player = new Player();
-        playerView = new EntityView(gameResources.getModel(EntityType.PLAYER), player);
+        playerView = new EntityView(gameResources.getModel(EntityType.PLAYER));
 
         populater = new Populater(gameResources);
-        entitiesRenderer.entityViews.add(playerView);
+
 
 
         worldInternalTickCallback = new WorldInternalTickCallback(collisionsWorld);
@@ -168,7 +178,6 @@ public class World {
     };
 
 
-    private Vector3 tmp = new Vector3();
 
     public void update(float delta) {
         deltaTime = delta;
@@ -177,26 +186,12 @@ public class World {
         for (Map.Entry<Vector3, VoxelMesh> entry : voxelRenderer.meshes.entrySet()) {
             if (entry.getValue().toUpdate) {
                 entry.getValue().update();
-                if(entry.getValue().verticesCalculated && entry.getValue().getNumVertices() > 0 && entry.getValue().getNumIndices() > 0){
+                if (entry.getValue().verticesCalculated && entry.getValue().getNumVertices() > 0 && entry.getValue().getNumIndices() > 0) {
                     removeGroundMesh(entry.getValue());
                     addGroundMesh(entry.getValue(), entry.getKey());
                 }
             }
         }
-
-
-        for (EntityView ev : entitiesRenderer.entityViews) {
-            ev.entity.update(this);
-        }
-
-        for (Entity e : toRemove) {
-            for (EntityView ev : entitiesRenderer.entityViews) {
-                if (ev.entity.equals(e)) {
-                    entitiesRenderer.entityViews.remove(ev);
-                }
-            }
-        }
-
 
 
 
@@ -206,7 +201,7 @@ public class World {
             cleanFarTimer = 0;
         }
 
-        if (GameVariables.DEBUG && Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (GameVariables.DEBUG && Gdx.app.getType() == Application.ApplicationType.Desktop && GameVariables.GAMEMODE==1) {
             Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
             debugDrawer.getShapeRenderer().setProjectionMatrix(camera.combined);
             debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawAabb);
@@ -218,28 +213,28 @@ public class World {
 
         populate();
 
-//        for (Map.Entry<EntityView, btRigidBody> object : entitiesBodies.entrySet()) {
-//            object.getValue().getWorldTransform().getTranslation(tmp);
-//            object.getKey().entity.getPosition().set(tmp);
-//
-//            object.getValue().applyCentralImpulse(object.getKey().entity.getVelocity());
-//        }
 
         playerGhostObject.getWorldTransform().getTranslation(player.getPosition());
+        playerBody.getWorldTransform().setTranslation(player.getPosition().cpy());
         collisionsWorld.stepSimulation(delta, 5, GameVariables.TIME_STEP);
         collisionsWorld.performDiscreteCollisionDetection();
 
         GameVariables.COLLISION_MESHES = collisionsWorld.getNumCollisionObjects();
-        GameVariables.ENTITIES = entitiesRenderer.entityViews.size;
+        GameVariables.ENTITIES = entitiesBodies.size();
     }
 
+    public void movePlayer(Vector3 pos) {
+        characterController.getGhostObject().setWorldTransform(new Matrix4().setToTranslation(pos));
+    }
 
     public void movePlayer(float deltaTime, float x, float z) {
+
         Vector3 playerMovement = new Vector3(x, 0, -z);
         playerMovement.rotate(player.getAngle() - 90, 0, 1, 0); //FIXME
         playerMovement.x *= 0.1f;
         playerMovement.z *= 0.1f;
         characterController.setWalkDirection(playerMovement);
+
     }
 
     public void moveEntity(Entity entity, float deltaTime, float x, float z) {
@@ -256,10 +251,6 @@ public class World {
         public void onInternalTick(btDynamicsWorld dynamicsWorld, float timeStep) {
 
         }
-    }
-
-    public void resetCleanFarTimer() {
-        cleanFarTimer = 0;
     }
 
 
@@ -296,7 +287,7 @@ public class World {
 
     }
 
-    public synchronized void removeGroundMesh(VoxelMesh mesh) {
+    public void removeGroundMesh(VoxelMesh mesh) {
         btRigidBody collisionMesh = groundMeshes.get(mesh);
         if (collisionMesh != null && collisionMesh.isInWorld()) {
             collisionsWorld.removeRigidBody(collisionMesh);
@@ -324,6 +315,20 @@ public class World {
 
         characterController.setGravity(GameVariables.GRAVITY);
 
+        btBoxShape collisionShape = new btBoxShape(player.getSize());
+
+
+        btMotionState dynamicMotionState = new btDefaultMotionState();
+        dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(camera.position));
+        Vector3 dynamicInertia = new Vector3(0, 0, 0);
+
+        collisionShape.calculateLocalInertia(1f, dynamicInertia);
+
+
+        btRigidBody.btRigidBodyConstructionInfo dynamicConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(1f, dynamicMotionState, collisionShape, dynamicInertia);
+        constructions.add(dynamicConstructionInfo);
+
+        playerBody = new btRigidBody(dynamicConstructionInfo);
 
         collisionsWorld.addCollisionObject(playerGhostObject,
                 (short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
@@ -331,17 +336,83 @@ public class World {
         collisionsWorld.addAction(characterController);
 
 
+
+        entitiesBodies.put(playerView, playerBody);
+
         controllers.add(characterController);
     }
 
 
-    public synchronized void dropBlock(Vector3 pos, ItemType itemType) {
+
+    private Vector3 tmp = new Vector3();
+    private Vector3 tmp2 = new Vector3();
+    private Vector3 tmp3 = new Vector3();
+    private Vector3 rayFrom = new Vector3();
+    private Vector3 rayTo = new Vector3();
+    private ClosestRayResultCallback rayResultCallback;
+
+
+    public void rayPick(int button){
+
+        Ray pickRay = camera.getPickRay(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
+        rayFrom.set(pickRay.origin);
+        rayTo.set(pickRay.direction.scl(5f).add(rayFrom));
+
+
+        rayResultCallback.setCollisionObject(null);
+        rayResultCallback.setClosestHitFraction(1f);
+        rayResultCallback.setCollisionFilterGroup((short)btBroadphaseProxy.CollisionFilterGroups.CharacterFilter);
+
+
+        rayResultCallback.setRayFromWorld(rayFrom);
+        rayResultCallback.setRayToWorld(rayTo);
+
+        collisionsWorld.rayTest(rayFrom, rayTo, rayResultCallback);
+
+        if(rayResultCallback.hasHit()) {
+            System.out.println("collisionObject:" + rayResultCallback.getCollisionObject()+ " "+rayResultCallback.getFlags());
+            rayResultCallback.getHitPointWorld(tmp);
+            rayResultCallback.getHitNormalWorld(tmp2);
+
+            Vector3 resDel = new Vector3(
+                    (float) Math.floor(tmp.x - tmp2.x/2),
+                    (float) Math.floor(tmp.y - tmp2.y/2),
+                    (float) Math.floor(tmp.z - tmp2.z/2));
+
+
+            Vector3 resAdd = new Vector3(
+                    (float) Math.floor(tmp.x + tmp2.x/2),
+                    (float) Math.floor(tmp.y + tmp2.y/2),
+                    (float) Math.floor(tmp.z + tmp2.z/2));
+
+            if (button == Input.Buttons.LEFT){
+                if(player.getInventory().getSelectedSlot().hasItem()){
+                    terrain.setVoxel(resAdd, ItemType.valueOf(player.getInventory().getSelectedSlot().removeItem()));
+                } else {
+                    //dropBlock(resDel, terrain.getVoxel(resDel)); //TODO HIT or DropBlock
+                    terrain.setVoxel(resDel, ItemType.EMPTY);
+                }
+
+            }
+            if (button == Input.Buttons.RIGHT){
+                if (tmp.dst(camera.position) < 1.5f){
+                    System.out.println(tmp.dst(camera.position));
+                    return;
+                }
+
+                terrain.setVoxel(resAdd, ItemType.WALL);
+            }
+        }
+    }
+
+    public void dropBlock(Vector3 pos, ItemType itemType) {
         //System.out.println(itemType);
+
         Entity e = new Item(itemType, pos.cpy().add(0.25f, 0.25f, 0.25f));
         e.setRoutine(new ToInventory(player));
-        EntityView ev = new EntityView(gameResources.getMiniCubeModel(itemType), e);
+        EntityView ev = new EntityView(gameResources.getMiniCubeModel(itemType));
 
-        entitiesRenderer.entityViews.add(ev);
+        //entitiesBodies.add(ev);
     }
 
 

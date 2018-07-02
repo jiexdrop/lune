@@ -66,7 +66,7 @@ public class GameRender implements Screen {
 
     private final World world;
 
-    public EntitiesRenderer entitiesRenderer = new EntitiesRenderer(camera);
+    public EntitiesRenderer entitiesRenderer;
 
     private InputMultiplexer inputMultiplexer;
 
@@ -79,7 +79,7 @@ public class GameRender implements Screen {
 
         voxelRenderer = new VoxelRenderer(game.textures, world, actualCamera);
         world.setVoxelRenderer(voxelRenderer);
-
+        entitiesRenderer = new EntitiesRenderer(world, camera);
         worldInput = new WorldInput(game, world, actualCamera);
         keyboardInput = new KeyboardInput(game, world, debugCamera);
 
@@ -97,7 +97,6 @@ public class GameRender implements Screen {
         inputMultiplexer.addProcessor(gestureDetector);
         inputMultiplexer.addProcessor(debugInput);
         inputMultiplexer.addProcessor(keyboardInput);
-
 
         Gdx.input.setInputProcessor(inputMultiplexer);
 
@@ -138,6 +137,7 @@ public class GameRender implements Screen {
                 inputMultiplexer.removeProcessor(debugInput);
             }
 
+            keyboardInput.update(delta);
             actualCamera.position.set(world.player.getX(), world.player.getY() + 2, world.player.getZ());
         }
 

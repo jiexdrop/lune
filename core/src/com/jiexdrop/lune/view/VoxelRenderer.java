@@ -60,14 +60,13 @@ public class VoxelRenderer implements RenderableProvider {
             if (isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
 
                 if (terrain.dirty.contains(chunkPos)) {
-
                     Runnable updateTerrain = new Runnable() {
                         @Override
                         public void run() {
                             mesh.calculateVertices(terrain, chunk, gameResources);
-                            mesh.toUpdate = true;
                         }
                     };
+                    mesh.toUpdate = true;
 
                     //Gdx.app.postRunnable(updateTerrain);
                     Helpers.executorService.submit(updateTerrain);

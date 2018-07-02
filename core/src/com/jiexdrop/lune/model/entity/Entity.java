@@ -36,7 +36,7 @@ public abstract class Entity {
         this.position = new Vector3();
         this.velocity = new Vector3();
         this.acceleration = new Vector3();
-        this.size = GameVariables.NORMAL_SIZE;
+        this.size = GameVariables.DUCK_SIZE;
         //body = new btCollisionObject();
         //body.setCollisionShape(new btBoxShape(getSize()));
         this.speed = GameVariables.ENTITIES_SPEED;

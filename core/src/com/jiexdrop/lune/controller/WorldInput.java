@@ -37,32 +37,10 @@ public class WorldInput implements GestureDetector.GestureListener, InputProcess
 
     @Override
     public boolean tap(float x, float y, int count, int button) {
-        world.player.getInventory().update();
-        Vector3 res = getBlockInSight(camera, world.terrain);
-        if(res != null) {
-            if(world.player.getInventory().getSelectedSlot().hasItem()){
-                world.terrain.setVoxel(res.add(0,1,0).cpy(), ItemType.valueOf(world.player.getInventory().getSelectedSlot().removeItem()));
-            } else {
-                world.dropBlock(res, world.terrain.getVoxel(res));
-                world.terrain.setVoxel(res, ItemType.EMPTY);
-            }
-        }
+        world.rayPick(button);
 
         return false;
 
-    }
-
-    Vector3 dir = new Vector3();
-    private Vector3 getBlockInSight(PerspectiveCamera camera, Terrain terrain) {
-        dir.set(camera.position);
-        for (int i = 0; i < GameVariables.CAMERA_FAR; i++) {
-            dir.x += camera.direction.x / 10;
-            dir.y += camera.direction.y / 10;
-            dir.z += camera.direction.z / 10;
-            ItemType res = terrain.getVoxel(Helpers.floorPos(dir));
-            if(res!=null) return Helpers.floorPos(dir);
-        }
-        return null;
     }
 
     @Override

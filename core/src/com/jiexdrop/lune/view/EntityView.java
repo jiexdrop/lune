@@ -13,10 +13,10 @@ import java.util.ArrayList;
  */
 
 public class EntityView{
-    public Entity entity;
+
     public ArrayList<Renderable> renderables = new ArrayList<Renderable>();
 
-    public EntityView(Model model, Entity entity){
+    public EntityView(Model model){
         int i = 0;
         for (MeshPart m: model.meshParts) {
             Renderable r = new Renderable();
@@ -26,7 +26,6 @@ public class EntityView{
             i++;
         }
 
-        this.entity = entity;
     }
 
 

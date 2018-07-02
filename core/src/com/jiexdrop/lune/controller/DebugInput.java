@@ -27,13 +27,13 @@ public class DebugInput extends InputAdapter {
     @Override
     public boolean keyDown(int keycode) {
         keys.put(keycode, keycode);
-        return true;
+        return false;
     }
 
     @Override
     public boolean keyUp(int keycode) {
         keys.remove(keycode, 0);
-        return true;
+        return false;
     }
 
     /**
