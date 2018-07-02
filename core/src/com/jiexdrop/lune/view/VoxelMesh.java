@@ -22,6 +22,9 @@ public class VoxelMesh extends Mesh {
     FloatArray vertices = new FloatArray();
     ShortArray indices = new ShortArray();
 
+    boolean verticesCalculated = false;
+    boolean toUpdate = false;
+
     protected VoxelMesh(VertexData vertices, IndexData indices, boolean isVertexArray) {
         super(vertices, indices, isVertexArray);
     }
@@ -47,18 +50,23 @@ public class VoxelMesh extends Mesh {
     }
 
 
-    public void update(Terrain terrain, VoxelChunk chunk, GameResources gameResources) {
+    public void calculateVertices(Terrain terrain, VoxelChunk chunk, GameResources gameResources) {
+        verticesCalculated = false;
         chunk.calculateVertices(terrain, vertices, indices, gameResources);
-        setVertices(vertices.toArray());
-        setIndices(indices.toArray());
-
-
-        vertices.clear();
-        indices.clear();
-        vertices.shrink();
-        indices.shrink();
-
+        verticesCalculated = true;
     }
 
 
+    public void update() {
+        if(verticesCalculated && vertices.size > 0 && indices.size > 0) {
+            setVertices(vertices.toArray());
+            setIndices(indices.toArray());
+
+            vertices.clear();
+            indices.clear();
+            vertices.shrink();
+            indices.shrink();
+            toUpdate = false;
+        }
+    }
 }

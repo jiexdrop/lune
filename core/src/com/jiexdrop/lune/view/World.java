@@ -174,14 +174,16 @@ public class World {
         deltaTime = delta;
         Helpers.executorService.submit(updateTerrain);
 
-        for (Map.Entry<Vector3, VoxelMesh> entry : voxelRenderer.meshesToUpdate.entrySet()) {
-            if (entry.getValue().getNumVertices() > 0 && entry.getValue().getNumIndices() > 0) {
-                removeGroundMesh(entry.getValue());
-                addGroundMesh(entry.getValue(), entry.getKey());
+        for (Map.Entry<Vector3, VoxelMesh> entry : voxelRenderer.meshes.entrySet()) {
+            if (entry.getValue().toUpdate) {
+                entry.getValue().update();
+                if(entry.getValue().verticesCalculated && entry.getValue().getNumVertices() > 0 && entry.getValue().getNumIndices() > 0){
+                    removeGroundMesh(entry.getValue());
+                    addGroundMesh(entry.getValue(), entry.getKey());
+                }
             }
         }
 
-        voxelRenderer.meshesToUpdate.clear();
 
         for (EntityView ev : entitiesRenderer.entityViews) {
             ev.entity.update(this);

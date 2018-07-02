@@ -37,7 +37,6 @@ public class VoxelRenderer implements RenderableProvider {
 
     public HashMap<Vector3, VoxelMesh> meshes;
 
-    public ConcurrentHashMap<Vector3, VoxelMesh> meshesToUpdate = new ConcurrentHashMap<Vector3, VoxelMesh>();
 
     public VoxelRenderer(GameResources gameResources, World world, PerspectiveCamera camera) {
         this.gameResources = gameResources;
@@ -61,18 +60,17 @@ public class VoxelRenderer implements RenderableProvider {
             if (isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
 
                 if (terrain.dirty.contains(chunkPos)) {
-                    //mesh.update(world, terrain, chunk, gameResources);
 
                     Runnable updateTerrain = new Runnable() {
                         @Override
                         public void run() {
-                            mesh.update(terrain, chunk, gameResources);
-                            meshesToUpdate.put(chunkPos,mesh);
+                            mesh.calculateVertices(terrain, chunk, gameResources);
+                            mesh.toUpdate = true;
                         }
                     };
 
-
-                    Gdx.app.postRunnable(updateTerrain);
+                    //Gdx.app.postRunnable(updateTerrain);
+                    Helpers.executorService.submit(updateTerrain);
                     terrain.dirty.remove(chunkPos);
                 }
             }
@@ -91,9 +89,9 @@ public class VoxelRenderer implements RenderableProvider {
                     if (!isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
                         cleaned_meshes++;
                         world.removeGroundMesh(mesh);
+                        mesh.toUpdate = false;
                         mesh.dispose();
                         meshes.remove(chunkPos);
-                        meshesToUpdate.remove(chunkPos);
                         terrain.dirty.add(chunkPos);
                     }
                 }
@@ -175,7 +173,7 @@ public class VoxelRenderer implements RenderableProvider {
     }
 
     protected boolean isVisible(Vector3 position) {
-        return camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
+        return Helpers.intersect(camera.position,GameVariables.CAMERA_FAR/2, position, 1) && camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
     }
 
 
