@@ -36,7 +36,7 @@ public class ViewContainers extends Table implements Observer, Displayable {
 
     ViewContainers(World world, GameResources gameResources){
         this.world = world;
-        this.inventory = world.player.getInventory();
+        this.inventory = world.getPlayer().getInventory();
         this.gameResources = gameResources;
         this.itemSlots = new ButtonGroup<ViewItemSlot>();
 

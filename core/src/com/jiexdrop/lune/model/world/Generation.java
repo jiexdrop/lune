@@ -86,13 +86,17 @@ public class Generation {
                         double sZ = ((chunkPos.z * GameVariables.CHUNK_SIZE) + k) * GameVariables.TERRAIN_FREQUENCY;
                         double s = SimplexNoise.noise(sX, sY, sZ) * 10;
 
-                        if (s < 1) {
+                        if (s > 1) {
                             voxelChunk.set(i, j, k, ItemType.GRASS);
+
                         }
 
                     }
                 }
+
             }
+
+            generateStructure(voxelChunk, 8, 8, 8, StructureType.TREE);
 
             terrain.cleanNeighboors(chunkPos);
         }

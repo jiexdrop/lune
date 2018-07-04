@@ -66,16 +66,17 @@ public class WorldInput implements GestureDetector.GestureListener, InputProcess
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
 
-        world.player.getInventory().update();
+        world.getPlayer().getInventory().update();
         float deltaX = -Gdx.input.getDeltaX(pointer) * 0.5f;
         float deltaY = -Gdx.input.getDeltaY(pointer) * 0.5f;
 
         camera.direction.rotate(camera.up, deltaX);
         tmp.set(camera.direction).crs(camera.up).nor();
         camera.direction.rotate(tmp, deltaY);
+        //TODO Camera Angle
         Vector2 camAngle = new Vector2(camera.direction.x, camera.direction.z);
         //System.out.println(camAngle.angle());
-        world.player.setAngle(-camAngle.angle());
+        //world.player.setAngle(-camAngle.angle());
 
         return true;
 

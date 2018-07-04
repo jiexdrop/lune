@@ -1,7 +1,9 @@
 package com.jiexdrop.lune.model.entity;
 
+import com.badlogic.gdx.math.Matrix4;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.entity.container.Inventory;
+import com.jiexdrop.lune.view.EntityView;
 import com.jiexdrop.lune.view.World;
 import com.jiexdrop.lune.view.ItemType;
 
@@ -17,8 +19,6 @@ public class Player extends Living {
     public Player(){
         name = ItemType.PLAYER.name();
 
-        position.y = GameVariables.SPAWN_HEIGHT;
-
         speed = GameVariables.PLAYER_SPEED;
         size = GameVariables.PLAYER_SIZE;
 
@@ -27,6 +27,7 @@ public class Player extends Living {
         color = GameVariables.PLAYER_SKIN_MOUNTAINS;
     }
 
+    Matrix4 matrix4 = new Matrix4();
     @Override
     public void update(World world) {
         elapsedTime += world.deltaTime;
@@ -35,10 +36,9 @@ public class Player extends Living {
             satiety-= GameVariables.SATIETY_STEP;
         }
 
-        velocity.add(acceleration);
-        velocity.limit(speed);
-        position.add(velocity);
-        acceleration.setZero();
+        world.getRigidBody(this).getWorldTransform().setToTranslation(position);
+        world.getRigidBody(this).getWorldTransform().getRotation(rotation);
+        world.getRigidBody(this).getMotionState().getWorldTransform(matrix4);
 
         updateGameVariables();
     }
@@ -51,10 +51,10 @@ public class Player extends Living {
         }
     }
 
-    private void updateGameVariables(){
-        GameVariables.PLAYER_POSITION.x = getX();
-        GameVariables.PLAYER_POSITION.y = getY();
-        GameVariables.PLAYER_POSITION.z = getZ();
+    private void updateGameVariables() {
+        GameVariables.PLAYER_POSITION.x = getPosition().x;
+        GameVariables.PLAYER_POSITION.y = getPosition().y;
+        GameVariables.PLAYER_POSITION.z = getPosition().z;
 
         GameVariables.PLAYER_HEALTH = health;
     }

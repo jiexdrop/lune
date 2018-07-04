@@ -127,7 +127,7 @@ public class GameVariables {
 
     public static final Vector3 MAGNET_SIZE = new Vector3(1,1,1);
 
-    public static final Vector3 ITEM_SIZE = new Vector3(1,1,1);
+    public static final Vector3 ITEM_SIZE = new Vector3(0.25f,0.25f,0.25f);
 
     public static final float TIME_STEP = 1/60f;
 

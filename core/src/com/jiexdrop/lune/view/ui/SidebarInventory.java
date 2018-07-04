@@ -29,7 +29,7 @@ public class SidebarInventory extends Table implements Observer {
         this.world = world;
         this.gameResources = gameResources;
         sideBarItemSlots = new ButtonGroup<ViewItemSlot>();
-        this.inventory = world.player.getInventory();
+        this.inventory = world.getPlayer().getInventory();
 
         this.inventory.addObserver(this);
     }
@@ -64,6 +64,6 @@ public class SidebarInventory extends Table implements Observer {
 
         }
 
-        world.player.getInventory().setSelectedSlot(sideBarItemSlots.getCheckedIndex());
+        world.getPlayer().getInventory().setSelectedSlot(sideBarItemSlots.getCheckedIndex());
     }
 }

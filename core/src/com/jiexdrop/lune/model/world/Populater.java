@@ -8,7 +8,8 @@ import com.badlogic.gdx.physics.bullet.linearmath.btDefaultMotionState;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.entity.Enemy;
-import com.jiexdrop.lune.model.entity.Entity;
+import com.jiexdrop.lune.model.entity.Living;
+import com.jiexdrop.lune.model.entity.Player;
 import com.jiexdrop.lune.model.entity.routine.Repeat;
 import com.jiexdrop.lune.model.entity.routine.Wander;
 import com.jiexdrop.lune.view.EntityType;
@@ -23,30 +24,50 @@ import com.jiexdrop.lune.view.World;
 public class Populater {
     GameResources gameResources;
 
+    public boolean init = true;
+
+    public Player player;
+
     public Populater(GameResources gameResources) {
         this.gameResources = gameResources;
     }
 
     public void populate(World world) {
+        if(init){
+            addEntity(world, Vector3.Zero, EntityType.PLAYER);
+            init = false;
+        }
+
         if (world.entitiesBodies.size() < GameVariables.NB_ENEMIES) {
             Vector3 position = new Vector3(Helpers.randomSpacing(GameVariables.ENEMIES_SPACING),
                     GameVariables.SPAWN_HEIGHT,
                     Helpers.randomSpacing(GameVariables.ENEMIES_SPACING));
 
 
-            addEntity(world, position);
-
+            addEntity(world, position, EntityType.DUCK);
 
         }
     }
 
-    public void addEntity(World world, Vector3 position) {
-        Enemy enemy = new Enemy("DUCK", position);
-        Repeat repeat = new Repeat(new Wander(enemy));
-        enemy.setRoutine(repeat);
+    public void addEntity(World world, Vector3 position, EntityType entityType) {
+        Living living;
 
-        btBoxShape collisionShape = new btBoxShape(enemy.getSize());
+        switch (entityType) {
+            case PLAYER:
+                player = new Player();
+                living = player;
+                break;
+            default:
+                Enemy enemy = new Enemy(entityType.name(), position);
+                Repeat repeat = new Repeat(new Wander(enemy));
+                enemy.setRoutine(repeat);
+                living = enemy;
 
+                break;
+
+        }
+
+        btBoxShape collisionShape = new btBoxShape(living.getSize());
 
         btMotionState dynamicMotionState = new btDefaultMotionState();
         dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(position));
@@ -60,20 +81,12 @@ public class Populater {
 
         btRigidBody body = new btRigidBody(dynamicConstructionInfo);
 
-//        body.setActivationState(4);
-//        body.setContactProcessingThreshold(0.0f);
-//        body.setRestitution(0);
-//        body.setDamping(0.9f, 0.9f);
-//        body.setLinearFactor(new Vector3(1, 1, 1));
-//        body.setAngularFactor(Vector3.Zero);
-//        body.setContactCallbackFlag(2);
-//        body.setContactCallbackFilter(2);
-
         world.collisionsWorld.addRigidBody(body);
 
-        EntityView entityView = new EntityView(gameResources.getModel(EntityType.DUCK));
+
+        EntityView entityView = new EntityView(gameResources.getModel(entityType));
         world.entitiesBodies.put(entityView, body);
-        world.entitiesViews.put(enemy, entityView);
+        world.entitiesViews.put(living, entityView);
     }
 
 

@@ -21,7 +21,6 @@ public abstract class Living extends Entity {
     }
 
 
-    @Override
     public boolean isAlive(){
         return health>0;
     }

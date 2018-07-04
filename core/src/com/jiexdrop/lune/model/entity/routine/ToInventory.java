@@ -34,7 +34,7 @@ public class ToInventory extends Routine {
 
         if(moveTo.hasSucceeded()){
             succeed();
-            world.player.getInventory().addItem(Helpers.toItem(entity));
+            world.getPlayer().getInventory().addItem(Helpers.toItem(entity));
             world.removeEntity(entity);
         }
 

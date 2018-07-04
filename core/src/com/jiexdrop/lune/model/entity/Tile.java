@@ -21,10 +21,6 @@ public class Tile extends Entity {
 
         this.size = GameVariables.TILES_SIZE;
     }
-    @Override
-    public boolean isAlive() {
-        return false;
-    }
 
     @Override
     public void update(World world) {

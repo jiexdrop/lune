@@ -65,14 +65,6 @@ public class Item extends Entity {
             routine.act(this, world);
         }
 
-        velocity.add(acceleration);
-        velocity.limit(speed);
-        position.add(velocity);
-        acceleration.setZero();
     }
 
-    @Override
-    public boolean isAlive() {
-        return false;
-    }
 }

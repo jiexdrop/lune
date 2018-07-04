@@ -3,6 +3,7 @@ package com.jiexdrop.lune.model.entity;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
 import com.jiexdrop.lune.GameVariables;
+import com.jiexdrop.lune.view.EntityView;
 import com.jiexdrop.lune.view.World;
 import com.jiexdrop.lune.view.ItemType;
 
@@ -31,10 +32,10 @@ public class Enemy extends Living {
             routine.act(this, world);
         }
 
-        velocity.add(acceleration);
-        velocity.limit(speed);
-        position.add(velocity);
-        acceleration.setZero();
+
+        EntityView ev = world.entitiesViews.get(this);
+        world.entitiesBodies.get(ev).getWorldTransform().setToTranslation(position);
+        world.entitiesBodies.get(ev).getWorldTransform().getRotation(rotation);
     }
 
     @Override

@@ -50,26 +50,26 @@ public class KeyboardInput implements InputProcessor {
     public void update(float deltaTime) {
 
         if (keys.containsKey(FORWARD)) {
-            world.movePlayer(deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
         if (keys.containsKey(BACKWARD)) {
-            world.movePlayer(deltaTime, 0, -1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
         if (keys.containsKey(LEFT)) {
-            world.movePlayer(deltaTime, -1, 0);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
         if (keys.containsKey(RIGHT)) {
-            world.movePlayer(deltaTime, 1, 0);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
         if (keys.containsKey(STRAFE_LEFT)) {
-            world.movePlayer(deltaTime, -1, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
         if (keys.containsKey(STRAFE_RIGHT)) {
-            world.movePlayer(deltaTime, 1, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
 
         if(keys.size == 0){
-            world.movePlayer(deltaTime, 0, 0);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
 
     }

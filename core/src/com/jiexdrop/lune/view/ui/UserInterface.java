@@ -92,9 +92,9 @@ public class UserInterface extends Stage {
     public void draw(){
         super.draw();
 
-        if(touchpad.isTouched()) world.movePlayer(world.deltaTime, touchpad.getKnobPercentX(), touchpad.getKnobPercentY());
+        if(touchpad.isTouched()) world.moveEntity(world.getPlayer(), world.deltaTime, touchpad.getKnobPercentX(), touchpad.getKnobPercentY());
 
-        if(debugListener.count == 5){
+        if(debugListener.count == 1){
             debugListener.count = 0;
             GameVariables.DEBUG = !GameVariables.DEBUG;
         }

@@ -17,6 +17,8 @@ public class MoveTo extends Routine {
     Vector3 destination;
     Entity toEntity;
 
+    Vector3 position;
+
 
     public MoveTo(Vector3 destination) {
         start();
@@ -36,9 +38,11 @@ public class MoveTo extends Routine {
             destination = toEntity.getPosition();
         }
 
+        this.position = entity.getPosition();
+
         moveTo(entity, destination, world);
 
-        distance = Vector2.dst(entity.getX(), entity.getZ(), destination.x, destination.z);
+        distance = Vector2.dst(position.x, position.z, destination.x, destination.z);
 
         if(distance < GameVariables.MAGNET_SIZE.x){
             succeed();
@@ -47,7 +51,7 @@ public class MoveTo extends Routine {
 
     void moveTo(Entity entity, Vector3 destination, World world){
 
-        Vector3 direction = destination.cpy().sub(entity.getX(), entity.getY(), entity.getZ()).nor();
+        Vector3 direction = destination.cpy().sub(position.x, position.y, position.z).nor();
 
         world.moveEntity(entity, world.deltaTime, direction.x, direction.z);
     }

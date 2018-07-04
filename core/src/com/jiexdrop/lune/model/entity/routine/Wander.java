@@ -29,8 +29,8 @@ public class Wander extends Routine {
     @Override
     public void start() {
         super.start();
-        moveTo = new MoveTo(new Vector3(entity.getX() + Helpers.randomSpacing(GameVariables.ENEMIES_SPACING),
-                entity.getY(), entity.getZ() + Helpers.randomSpacing(GameVariables.ENEMIES_SPACING) ));
+        moveTo = new MoveTo(new Vector3(entity.getPosition().x + Helpers.randomSpacing(GameVariables.ENEMIES_SPACING),
+                entity.getPosition().y, entity.getPosition().z + Helpers.randomSpacing(GameVariables.ENEMIES_SPACING) ));
     }
 
     @Override

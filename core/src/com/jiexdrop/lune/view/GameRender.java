@@ -1,5 +1,6 @@
 package com.jiexdrop.lune.view;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
@@ -75,7 +76,7 @@ public class GameRender implements Screen {
 
         actualCamera = camera;
 
-        world = new World(game.textures, entitiesRenderer, actualCamera);
+        world = new World(game.textures, entitiesRenderer,camera);
 
         voxelRenderer = new VoxelRenderer(game.textures, world, actualCamera);
         world.setVoxelRenderer(voxelRenderer);
@@ -100,7 +101,7 @@ public class GameRender implements Screen {
 
         Gdx.input.setInputProcessor(inputMultiplexer);
 
-        world.addPlayerMesh(actualCamera);
+        //world.addPlayerMesh(actualCamera);
     }
 
 
@@ -117,12 +118,11 @@ public class GameRender implements Screen {
 
 
         if(GameVariables.GAMEMODE==1) {
-
             if(inputMultiplexer.getProcessors().contains(worldInput, true)) {
                 actualCamera = debugCamera;
                 inputMultiplexer.removeProcessor(worldInput);
                 inputMultiplexer.addProcessor(debugInput);
-                actualCamera.position.set(world.player.getX(), world.player.getY() + 2, world.player.getZ());
+                actualCamera.position.set(world.getPlayer().getPosition().x, world.getPlayer().getPosition().y + 2, world.getPlayer().getPosition().z);
             }
             //world.player.getPosition().set(actualCamera.position.x, actualCamera.position.y  - world.player.getSize().y, actualCamera.position.z);
             //Vector2 camAngle = new Vector2(actualCamera.direction.x, actualCamera.direction.z);
@@ -138,7 +138,7 @@ public class GameRender implements Screen {
             }
 
             keyboardInput.update(delta);
-            actualCamera.position.set(world.player.getX(), world.player.getY() + 2, world.player.getZ());
+            actualCamera.position.set(world.getPlayer().getPosition().x, world.getPlayer().getPosition().y + 2, world.getPlayer().getPosition().z);
         }
 
         actualCamera.update();
@@ -151,6 +151,16 @@ public class GameRender implements Screen {
         entitiesBatch.begin(actualCamera);
         entitiesBatch.render(entitiesRenderer, environment);
         entitiesBatch.end();
+
+        if (GameVariables.DEBUG && Gdx.app.getType() == Application.ApplicationType.Desktop && GameVariables.GAMEMODE==1) {
+            Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+            world.debugDrawer.getShapeRenderer().setProjectionMatrix(debugCamera.combined);
+            world.debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawAabb);
+            world.debugDrawer.begin(debugCamera);
+            world.collisionsWorld.debugDrawWorld();
+            world.debugDrawer.end();
+            Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        }
 
 
         userInterface.draw();
