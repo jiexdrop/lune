@@ -3,6 +3,11 @@ package com.jiexdrop.lune.model.world;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
+import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
+import com.badlogic.gdx.physics.bullet.collision.btGhostPairCallback;
+import com.badlogic.gdx.physics.bullet.collision.btPairCachingGhostObject;
+import com.badlogic.gdx.physics.bullet.dynamics.btKinematicCharacterController;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.linearmath.btDefaultMotionState;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
@@ -38,13 +43,13 @@ public class Populater {
             init = false;
         }
 
-        if (world.entitiesBodies.size() < GameVariables.NB_ENEMIES) {
+        if (world.entitiesViews.size() < GameVariables.NB_ENEMIES) {
             Vector3 position = new Vector3(Helpers.randomSpacing(GameVariables.ENEMIES_SPACING),
                     GameVariables.SPAWN_HEIGHT,
                     Helpers.randomSpacing(GameVariables.ENEMIES_SPACING));
 
 
-            addEntity(world, position, EntityType.DUCK);
+           addEntity(world, position, EntityType.DUCK);
 
         }
     }
@@ -62,30 +67,17 @@ public class Populater {
                 Repeat repeat = new Repeat(new Wander(enemy));
                 enemy.setRoutine(repeat);
                 living = enemy;
-
                 break;
 
         }
 
-        btBoxShape collisionShape = new btBoxShape(living.getSize());
-
-        btMotionState dynamicMotionState = new btDefaultMotionState();
-        dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(position));
-        Vector3 dynamicInertia = new Vector3(0, 0, 0);
-
-        collisionShape.calculateLocalInertia(1f, dynamicInertia);
 
 
-        btRigidBody.btRigidBodyConstructionInfo dynamicConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(1f, dynamicMotionState, collisionShape, dynamicInertia);
-        world.constructions.add(dynamicConstructionInfo);
-
-        btRigidBody body = new btRigidBody(dynamicConstructionInfo);
-
-        world.collisionsWorld.addRigidBody(body);
 
 
         EntityView entityView = new EntityView(gameResources.getModel(entityType));
-        world.entitiesBodies.put(entityView, body);
+        //world.entitiesBodies.put(entityView, body);
+
         world.entitiesViews.put(living, entityView);
     }
 

@@ -33,9 +33,6 @@ public class Enemy extends Living {
         }
 
 
-        EntityView ev = world.entitiesViews.get(this);
-        world.entitiesBodies.get(ev).getWorldTransform().setToTranslation(position);
-        world.entitiesBodies.get(ev).getWorldTransform().getRotation(rotation);
     }
 
     @Override

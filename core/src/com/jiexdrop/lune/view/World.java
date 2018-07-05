@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -103,25 +104,11 @@ public class World {
 
     public HashMap<Entity, EntityView> entitiesViews = new HashMap<Entity, EntityView>();
 
-    // Player
-
-//    private btPairCachingGhostObject playerGhostObject;
-//
-//    private btBoxShape playerShape;
-//
-//    private btRigidBody playerBody;
-
-    private btKinematicCharacterController characterController;
-
-    private Array<btKinematicCharacterController> controllers = new Array<btKinematicCharacterController>();
-
-    private btAxisSweep3 btSweep3;
+    public btAxisSweep3 btSweep3;
 
     private HashMap<VoxelMesh, btRigidBody> groundMeshes = new HashMap<VoxelMesh, btRigidBody>();
 
-
     private WorldInternalTickCallback worldInternalTickCallback;
-
 
     public DebugDrawer debugDrawer;
 
@@ -185,19 +172,12 @@ public class World {
 
 
         for (Entity e:toRemove) {
-            EntityView ev = entitiesViews.get(e);
-            btRigidBody body = entitiesBodies.get(ev);
 
-            if(body != null && body.isInWorld()) collisionsWorld.removeRigidBody(body);
 
-            entitiesViews.remove(e);
-            entitiesBodies.remove(ev);
-            bodiesEntities.remove(body);
         }
 
         for (Entity e:entitiesViews.keySet()) {
-            e.update(this);
-            entitiesBodies.get(entitiesViews.get(e)).getWorldTransform().getTranslation(e.getPosition());
+            //e.update(this);
         }
 
         cleanFarTimer++;
@@ -219,7 +199,7 @@ public class World {
     }
 
     public void movePlayer(Vector3 pos) {
-        getRigidBody(getPlayer()).setWorldTransform(new Matrix4().setToTranslation(pos));
+
     }
 
     public btRigidBody getRigidBody(Entity e){
@@ -227,8 +207,10 @@ public class World {
     }
 
 
+
     public void moveEntity(Entity entity, float deltaTime, float x, float z) {
-        getRigidBody(entity).applyCentralForce(new Vector3(x, 0, z));
+//        getKinematicBody(entity).setWalkDirection(new Vector3(x *deltaTime, 0, z*deltaTime));
+
     }
 
     public Player getPlayer() {
@@ -401,6 +383,8 @@ public class World {
     public void dropBlock(Vector3 pos, ItemType itemType) {
         System.out.println(itemType);
 
+        //TODO not stable
+
         if(itemType != null) {
             Entity e = new Item(itemType, pos);
             e.setRoutine(new ToInventory(getPlayer()));
@@ -410,7 +394,7 @@ public class World {
 
 
             btMotionState dynamicMotionState = new btDefaultMotionState();
-            dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(pos.add(1, 1, 1)));
+            dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(pos));
             Vector3 dynamicInertia = new Vector3(0, 0, 0);
 
             collisionShape.calculateLocalInertia(1f, dynamicInertia);
@@ -421,12 +405,6 @@ public class World {
 
             btRigidBody body = new btRigidBody(dynamicConstructionInfo);
 
-            body.setActivationState(4);
-            body.setContactProcessingThreshold(0.0f);
-            body.setRestitution(0);
-            body.setDamping(0.9f, 0.9f);
-            body.setLinearFactor(new Vector3(1, 1, 1));
-            body.setAngularFactor(Vector3.Zero);
             body.setContactCallbackFlag(btBroadphaseProxy.CollisionFilterGroups.StaticFilter);
             body.setContactCallbackFilter(0);
 

@@ -27,7 +27,7 @@ public class Player extends Living {
         color = GameVariables.PLAYER_SKIN_MOUNTAINS;
     }
 
-    Matrix4 matrix4 = new Matrix4();
+
     @Override
     public void update(World world) {
         elapsedTime += world.deltaTime;
@@ -36,9 +36,6 @@ public class Player extends Living {
             satiety-= GameVariables.SATIETY_STEP;
         }
 
-        world.getRigidBody(this).getWorldTransform().setToTranslation(position);
-        world.getRigidBody(this).getWorldTransform().getRotation(rotation);
-        world.getRigidBody(this).getMotionState().getWorldTransform(matrix4);
 
         updateGameVariables();
     }
