@@ -1,6 +1,7 @@
 package com.jiexdrop.lune.model.entity;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
@@ -22,6 +23,7 @@ public abstract class Entity {
     protected int speed;
     protected Color color;
 
+    public Matrix4 transform;
     protected Vector3 position;
     protected Quaternion rotation;
 
@@ -29,12 +31,14 @@ public abstract class Entity {
 
     protected float elapsedTime;
 
+    public float angle;
 
     public Entity(){
-        this.size = GameVariables.DUCK_SIZE;
-        this.position = Vector3.Zero;
-        this.speed = GameVariables.ENTITIES_SPEED;
+        this.size = GameVariables.NORMAL_SIZE;
+        this.transform = new Matrix4();
+        this.position = new Vector3();
         this.rotation = new Quaternion();
+        this.speed = GameVariables.ENTITIES_SPEED;
     }
 
     public void setRoutine(Routine routine) {
@@ -46,7 +50,7 @@ public abstract class Entity {
     }
 
     public Vector3 getPosition(){
-        return position;
+        return transform.getTranslation(position);
     }
 
     public abstract void update(World world);
@@ -63,8 +67,4 @@ public abstract class Entity {
         return size;
     }
 
-
-    public float getAngle() {
-        return rotation.getAngle();
-    }
 }

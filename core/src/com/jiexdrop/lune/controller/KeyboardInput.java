@@ -53,23 +53,23 @@ public class KeyboardInput implements InputProcessor {
             world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
         }
         if (keys.containsKey(BACKWARD)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, -1);
         }
         if (keys.containsKey(LEFT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, -1, 0);
         }
         if (keys.containsKey(RIGHT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 1, 0);
         }
         if (keys.containsKey(STRAFE_LEFT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, -1, 1);
         }
         if (keys.containsKey(STRAFE_RIGHT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 1, 1);
         }
 
         if(keys.size == 0){
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 0);
         }
 
     }

@@ -39,6 +39,7 @@ public class Populater {
 
     public void populate(World world) {
         if(init){
+
             addEntity(world, Vector3.Zero, EntityType.PLAYER);
             init = false;
         }
@@ -57,13 +58,14 @@ public class Populater {
     public void addEntity(World world, Vector3 position, EntityType entityType) {
         Living living;
 
+
         switch (entityType) {
             case PLAYER:
                 player = new Player();
                 living = player;
                 break;
             default:
-                Enemy enemy = new Enemy(entityType.name(), position);
+                Enemy enemy = new Enemy(entityType.name());
                 Repeat repeat = new Repeat(new Wander(enemy));
                 enemy.setRoutine(repeat);
                 living = enemy;
@@ -73,12 +75,58 @@ public class Populater {
 
 
 
+        btPairCachingGhostObject ghostObject = new btPairCachingGhostObject();
+        world.ghosts.put(living, ghostObject);
+
+
+        living.transform.setToTranslation(position);
+
+        ghostObject.setWorldTransform(living.transform);
+
+
+        btBoxShape boxShape = new btBoxShape(living.getSize());
+        world.shapes.add(boxShape);
+
+
+        ghostObject.setCollisionShape(boxShape);
+        ghostObject.setCollisionFlags(btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT);
+
+
+        btKinematicCharacterController entityController = new btKinematicCharacterController(ghostObject, boxShape, 1f);
+
+        entityController.setGravity(GameVariables.GRAVITY.cpy());
+
+
+
+        btMotionState dynamicMotionState = new btDefaultMotionState();
+        world.states.add(dynamicMotionState);
+
+
+        dynamicMotionState.setWorldTransform(living.transform); // Fixme ?
+        Vector3 dynamicInertia = Vector3.Zero.cpy();
+
+        boxShape.calculateLocalInertia(1f, dynamicInertia);
+
+
+        btRigidBody.btRigidBodyConstructionInfo dynamicConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(1f, dynamicMotionState, boxShape, dynamicInertia);
+        world.constructions.add(dynamicConstructionInfo);
+
+
+
+        world.collisionsWorld.addCollisionObject(ghostObject,
+                (short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
+                (short) (btBroadphaseProxy.CollisionFilterGroups.StaticFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
+        world.collisionsWorld.addAction(entityController);
+
 
 
         EntityView entityView = new EntityView(gameResources.getModel(entityType));
-        //world.entitiesBodies.put(entityView, body);
 
         world.entitiesViews.put(living, entityView);
+        world.controllersBodies.put(entityController,living);
+        world.bodiesControllers.put(living,entityController);
+
+
     }
 
 

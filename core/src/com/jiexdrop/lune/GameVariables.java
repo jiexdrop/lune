@@ -115,7 +115,7 @@ public class GameVariables {
 
     public static final Vector3 TILES_SIZE = new Vector3(1,1,1);
 
-    public static final Vector3 ENEMY_SIZE = new Vector3(1,2,1);
+    public static final Vector3 ENEMY_SIZE = new Vector3(1,1,1);
 
     public static final Vector3 ENTITY_SIZE = new Vector3(1,2,1);
 

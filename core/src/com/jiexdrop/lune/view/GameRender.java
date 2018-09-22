@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
 import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
@@ -104,7 +105,7 @@ public class GameRender implements Screen {
         //world.addPlayerMesh(actualCamera);
     }
 
-
+    Vector2 converter = new Vector2();
 
     @Override
     public void render(float delta) {
@@ -136,7 +137,7 @@ public class GameRender implements Screen {
                 inputMultiplexer.addProcessor(worldInput);
                 inputMultiplexer.removeProcessor(debugInput);
             }
-
+            world.getPlayer().angle = - converter.set(actualCamera.direction.x, actualCamera.direction.z).angle() - 90; //TODO Not here
             keyboardInput.update(delta);
             actualCamera.position.set(world.getPlayer().getPosition().x, world.getPlayer().getPosition().y + 2, world.getPlayer().getPosition().z);
         }

@@ -92,19 +92,28 @@ public class World {
 
     public ArrayList<btRigidBody.btRigidBodyConstructionInfo> constructions = new ArrayList<btRigidBody.btRigidBodyConstructionInfo>();
 
-    private ArrayList<btCollisionShape> shapes = new ArrayList<btCollisionShape>();
+    public ArrayList<btCollisionShape> shapes = new ArrayList<btCollisionShape>();
 
-    private ArrayList<btMotionState> states = new ArrayList<btMotionState>();
+    public ArrayList<btMotionState> states = new ArrayList<btMotionState>();
+
 
     private ArrayList<btRigidBody> bodies = new ArrayList<btRigidBody>();
+
+    public HashMap<Entity, btPairCachingGhostObject> ghosts = new HashMap<Entity, btPairCachingGhostObject>();
 
     public HashMap<EntityView, btRigidBody> entitiesBodies = new HashMap<EntityView, btRigidBody>(); //TODO Not public
 
     public HashMap<btRigidBody, EntityView> bodiesEntities = new HashMap<btRigidBody, EntityView>();
 
+    public HashMap<btKinematicCharacterController, Entity> controllersBodies = new HashMap<btKinematicCharacterController, Entity>();
+
+    public HashMap<Entity, btKinematicCharacterController> bodiesControllers = new HashMap<Entity, btKinematicCharacterController>();
+
     public HashMap<Entity, EntityView> entitiesViews = new HashMap<Entity, EntityView>();
 
     public btAxisSweep3 btSweep3;
+
+    public btGhostPairCallback ghostPairCallback;
 
     private HashMap<VoxelMesh, btRigidBody> groundMeshes = new HashMap<VoxelMesh, btRigidBody>();
 
@@ -135,6 +144,10 @@ public class World {
             collisionsWorld = new btDiscreteDynamicsWorld(dispatcher, btSweep3, solver, collisionConfig);
             collisionsWorld.setGravity(GameVariables.GRAVITY);
             rayResultCallback = new ClosestRayResultCallback(Vector3.Zero, Vector3.Z);
+            ghostPairCallback = new btGhostPairCallback();
+            btSweep3.getOverlappingPairCache().setInternalGhostPairCallback(ghostPairCallback);
+
+
         }
 
 
@@ -171,15 +184,6 @@ public class World {
         }
 
 
-        for (Entity e:toRemove) {
-
-
-        }
-
-        for (Entity e:entitiesViews.keySet()) {
-            //e.update(this);
-        }
-
         cleanFarTimer++;
         if (cleanFarTimer > 600 || GameVariables.TOTAL_MESHES > 96) {
             voxelRenderer.cleanFar();
@@ -188,9 +192,11 @@ public class World {
 
         populater.populate(this);
 
-//
-//        playerGhostObject.getWorldTransform().getTranslation(player.getPosition());
-//        playerBody.getWorldTransform().setTranslation(player.getPosition().cpy());
+
+        for (Entity e:entitiesViews.keySet()) {
+            if(ghosts.containsKey(e)) ghosts.get(e).getWorldTransform(e.transform);
+        }
+
         collisionsWorld.stepSimulation(delta, 5, GameVariables.TIME_STEP);
         collisionsWorld.performDiscreteCollisionDetection();
 
@@ -199,18 +205,18 @@ public class World {
     }
 
     public void movePlayer(Vector3 pos) {
-
+        getPlayer().transform.setTranslation(pos);
+        ghosts.get(getPlayer()).getWorldTransform().setTranslation(pos);
     }
 
-    public btRigidBody getRigidBody(Entity e){
-        return entitiesBodies.get(entitiesViews.get(e));
+    public btKinematicCharacterController getEntityController(Entity e){
+        return bodiesControllers.get(e);
     }
-
-
 
     public void moveEntity(Entity entity, float deltaTime, float x, float z) {
-//        getKinematicBody(entity).setWalkDirection(new Vector3(x *deltaTime, 0, z*deltaTime));
-
+        Vector3 tmp = new Vector3(x,0, -z); //FIXME
+        tmp.rotate(Vector3.Y, entity.angle);
+        getEntityController(entity).setWalkDirection(tmp);
     }
 
     public Player getPlayer() {
@@ -272,52 +278,6 @@ public class World {
             //groundMeshes.remove(mesh);
         }
     }
-
-    public void addPlayerMesh(PerspectiveCamera camera) {
-//
-//        playerGhostObject = new btPairCachingGhostObject();
-//        Matrix4 matrix4 = new Matrix4().setToTranslation(camera.position);
-//        playerGhostObject.setWorldTransform(matrix4);
-//
-//        btSweep3.getOverlappingPairCache().setInternalGhostPairCallback(new btGhostPairCallback());
-//
-//
-//        playerShape = new btBoxShape(player.getSize());
-//
-//
-//        playerGhostObject.setCollisionShape(playerShape);
-//        playerGhostObject.setCollisionFlags(btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT);
-//        characterController = new btKinematicCharacterController(playerGhostObject, playerShape, 1f);
-//
-//        characterController.setGravity(GameVariables.GRAVITY);
-//
-//        btBoxShape collisionShape = new btBoxShape(player.getSize());
-//
-//
-//        btMotionState dynamicMotionState = new btDefaultMotionState();
-//        dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(camera.position));
-//        Vector3 dynamicInertia = new Vector3(0, 0, 0);
-//
-//        collisionShape.calculateLocalInertia(1f, dynamicInertia);
-//
-//
-//        btRigidBody.btRigidBodyConstructionInfo dynamicConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(1f, dynamicMotionState, collisionShape, dynamicInertia);
-//        constructions.add(dynamicConstructionInfo);
-//
-//        playerBody = new btRigidBody(dynamicConstructionInfo);
-//
-//        collisionsWorld.addCollisionObject(playerGhostObject,
-//                (short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
-//                (short) (btBroadphaseProxy.CollisionFilterGroups.StaticFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
-//        collisionsWorld.addAction(characterController);
-//
-//        entitiesBodies.put(playerView, playerBody);
-//        bodiesEntities.put(playerBody, playerView);
-//        entitiesViews.put(player, playerView);
-//
-//        controllers.add(characterController);
-    }
-
 
 
     private Vector3 tmp = new Vector3();
@@ -386,7 +346,7 @@ public class World {
         //TODO not stable
 
         if(itemType != null) {
-            Entity e = new Item(itemType, pos);
+            Entity e = new Item(itemType);
             e.setRoutine(new ToInventory(getPlayer()));
             EntityView ev = new EntityView(gameResources.getMiniCubeModel(itemType));
 
@@ -394,7 +354,7 @@ public class World {
 
 
             btMotionState dynamicMotionState = new btDefaultMotionState();
-            dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(pos));
+            dynamicMotionState.setWorldTransform(new Matrix4().setToTranslation(pos.cpy().add(2,2,2)));
             Vector3 dynamicInertia = new Vector3(0, 0, 0);
 
             collisionShape.calculateLocalInertia(1f, dynamicInertia);

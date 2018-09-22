@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.Pool;
 import com.jiexdrop.lune.GameVariables;
+import com.jiexdrop.lune.model.entity.Entity;
 import com.jiexdrop.lune.model.entity.Player;
 
 import java.util.Map;
@@ -36,12 +37,15 @@ public class EntitiesRenderer implements RenderableProvider {
     public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
         renderedEntities = 0;
 
-        for (Map.Entry<EntityView, btRigidBody> object : world.entitiesBodies.entrySet()) {
-            if (isVisible(object.getValue().getWorldTransform())) {
-                for (Renderable r:object.getKey().renderables) {
+        for (Map.Entry<Entity, EntityView> object : world.entitiesViews.entrySet()) {
+            if (isVisible(object.getKey().transform)) {
+                for (Renderable r:object.getValue().renderables) {
                     Renderable renderable = pool.obtain();
                     renderable.set(r);
-                    renderable.worldTransform.set(object.getValue().getWorldTransform());
+                    renderable.worldTransform.set(object.getKey().transform);
+                    //FIXME
+                    renderable.worldTransform.rotate(Vector3.X, 90);
+                    renderable.worldTransform.scl(object.getKey().getSize());
                     renderables.add(renderable);
                 }
 

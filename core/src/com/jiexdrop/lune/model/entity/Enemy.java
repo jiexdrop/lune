@@ -14,10 +14,8 @@ import com.jiexdrop.lune.view.ItemType;
 
 public class Enemy extends Living {
 
-    public Enemy(String name, Vector3 pos) {
+    public Enemy(String name) {
         color = new Color(ItemType.valueOf(name.toUpperCase()).color);
-
-        position = pos;
 
         this.name = name;
 

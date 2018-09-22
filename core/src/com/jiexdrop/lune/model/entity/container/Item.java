@@ -18,17 +18,6 @@ public class Item extends Entity {
 
     public ItemType itemType;
 
-    public Item(ItemType itemType, Vector3 pos){
-        super();
-        position = pos.cpy();
-        this.color = itemType.color.cpy();
-        this.itemType = itemType;
-        this.name = itemType.name();
-
-        this.size = GameVariables.ITEM_SIZE;
-        this.speed = GameVariables.NORMAL_SPEED;
-    }
-
     public Item() {
         this.name = GameVariables.EMPTY;
         this.color = Color.CLEAR;

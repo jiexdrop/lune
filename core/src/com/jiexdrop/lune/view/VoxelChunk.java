@@ -135,42 +135,39 @@ public class VoxelChunk {
 
     }
 
-    private boolean faceToCreate(Terrain terrain, int x, int y, int z, Face face){
+    private boolean faceToCreate(Terrain terrain, int x, int y, int z, Face face) {
         VoxelChunk neighboor = terrain.chunks.get(position.cpy().add(face.pos));
 
         int nX, nY, nZ;
 
-        if(x<0){
+        if (x < 0) {
             nX = GameVariables.CHUNK_SIZE + x;
         } else {
-            nX = x%GameVariables.CHUNK_SIZE;
+            nX = x % GameVariables.CHUNK_SIZE;
         }
 
-        if(y<0){
+        if (y < 0) {
             nY = GameVariables.CHUNK_SIZE + y;
         } else {
-            nY = y%GameVariables.CHUNK_SIZE;
+            nY = y % GameVariables.CHUNK_SIZE;
         }
 
-        if(z<0){
+        if (z < 0) {
             nZ = GameVariables.CHUNK_SIZE + z;
         } else {
-            nZ = z%GameVariables.CHUNK_SIZE;
+            nZ = z % GameVariables.CHUNK_SIZE;
         }
 
-        if(notInBounds(x, y, z)) {
-            if(neighboor == null){
+        if (notInBounds(x, y, z)) {
+            if (neighboor == null) {
                 return false;
-            } else if(neighboor.voxels[nX][nY][nZ] != null){
+            } else if (neighboor.voxels[nX][nY][nZ] != null) {
                 return false;
             } else {
                 return true;
             }
         }
-        if(voxels[x][y][z]==null){
-            return true;
-        }
-        return voxels[x][y][z].equals(ItemType.EMPTY);
+        return voxels[x][y][z] == null || voxels[x][y][z].equals(ItemType.EMPTY);
     }
 
     private boolean notInBounds(int x, int y, int z){
@@ -216,11 +213,9 @@ public class VoxelChunk {
     }
 
     public static void createFCross(ItemType itemType, TextureRegion textureRegion, int x, int y, int z, FloatArray vertices) {
-        /**
-         * 1---2
-         * |   |
-         * 0---3
-         */
+        //1---2
+        //|   |
+        //0---3
 
         vertices.add(x); // 0
         vertices.add(y);
@@ -277,11 +272,10 @@ public class VoxelChunk {
     }
 
     public static void createF2Cross(ItemType itemType, TextureRegion textureRegion, int x, int y, int z, FloatArray vertices) {
-        /**
-         * 1---2
-         * |   |
-         * 0---3
-         */
+         //1---2
+         //|   |
+         //0---3
+
 
         vertices.add(x+1); // 0
         vertices.add(y);
@@ -339,11 +333,9 @@ public class VoxelChunk {
 
 
     public static void createD2Cross(ItemType itemType, TextureRegion textureRegion, int x, int y, int z, FloatArray vertices) {
-        /**
-         * 1---2
-         * |   |
-         * 0---3
-         */
+        //1---2
+        //|   |
+        //0---3
 
         vertices.add(x +1); // 0
         vertices.add(y);
@@ -401,11 +393,9 @@ public class VoxelChunk {
 
 
     public static void createDCross(ItemType itemType, TextureRegion textureRegion, int x, int y, int z, FloatArray vertices) {
-        /**
-         * 1---2
-         * |   |
-         * 0---3
-         */
+        //1---2
+        //|   |
+        //0---3
 
         vertices.add(x); // 0
         vertices.add(y);

@@ -12,10 +12,8 @@ import com.jiexdrop.lune.view.World;
 
 public class Tile extends Entity {
 
-    public Tile(String name, Vector3 pos) {
+    public Tile(String name) {
         color = new Color(ItemType.valueOf(name.toUpperCase()).color);
-
-        position = pos;
 
         this.name = name;
 

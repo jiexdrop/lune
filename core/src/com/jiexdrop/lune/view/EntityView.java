@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.math.Vector3;
 import com.jiexdrop.lune.model.entity.Entity;
 
 import java.util.ArrayList;
