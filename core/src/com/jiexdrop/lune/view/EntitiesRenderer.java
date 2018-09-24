@@ -43,6 +43,7 @@ public class EntitiesRenderer implements RenderableProvider {
                     Renderable renderable = pool.obtain();
                     renderable.set(r);
                     renderable.worldTransform.set(object.getKey().transform);
+                    renderable.worldTransform.translate(object.getKey().origin.x, object.getKey().origin.y, object.getKey().origin.z); //FIXME
                     renderables.add(renderable);
                 }
 

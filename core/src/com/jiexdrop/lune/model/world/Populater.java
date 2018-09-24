@@ -93,6 +93,7 @@ public class Populater {
 
         btPairCachingGhostObject ghostObject = new btPairCachingGhostObject();
         world.ghosts.put(entity, ghostObject);
+        world.ghostsEntities.put(ghostObject, entity);
 
 
         entity.transform.setToTranslation(position);

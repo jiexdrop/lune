@@ -102,6 +102,8 @@ public class World {
 
     public HashMap<Entity, btPairCachingGhostObject> ghosts = new HashMap<Entity, btPairCachingGhostObject>();
 
+    public HashMap<btPairCachingGhostObject, Entity> ghostsEntities = new HashMap<btPairCachingGhostObject, Entity>();
+
     public HashMap<EntityView, btRigidBody> entitiesBodies = new HashMap<EntityView, btRigidBody>(); //TODO Not public
 
     public HashMap<btRigidBody, EntityView> bodiesEntities = new HashMap<btRigidBody, EntityView>();
@@ -300,8 +302,9 @@ public class World {
 
         rayResultCallback.setCollisionObject(null);
         rayResultCallback.setClosestHitFraction(1f);
-        rayResultCallback.setCollisionFilterGroup((short)btBroadphaseProxy.CollisionFilterGroups.CharacterFilter);
 
+        //If I don't want to select characters anymore
+        //rayResultCallback.setCollisionFilterGroup((short)btBroadphaseProxy.CollisionFilterGroups.CharacterFilter);
 
         rayResultCallback.setRayFromWorld(rayFrom);
         rayResultCallback.setRayToWorld(rayTo);
@@ -309,7 +312,9 @@ public class World {
         collisionsWorld.rayTest(rayFrom, rayTo, rayResultCallback);
 
         if(rayResultCallback.hasHit()) {
-            System.out.println("collisionObject:" + rayResultCallback.getCollisionObject()+ " "+rayResultCallback.getFlags());
+            btCollisionObject collisionObject = rayResultCallback.getCollisionObject();
+            System.out.println("collisionObject:" + collisionObject + " "+rayResultCallback.getFlags());
+
             rayResultCallback.getHitPointWorld(tmp);
             rayResultCallback.getHitNormalWorld(tmp2);
 
@@ -327,8 +332,17 @@ public class World {
             if (button == Input.Buttons.LEFT){
                 if(getPlayer().getInventory().getSelectedSlot().hasItem()){
                     terrain.setVoxel(resAdd, ItemType.valueOf(getPlayer().getInventory().getSelectedSlot().removeItem()));
+                } else if(rayResultCallback.getCollisionObject().className.contains("btPairCachingGhostObject")){ //TODO Refactor
+                    Entity e = ghostsEntities.get(collisionObject);
+
+                    if(ghosts.containsKey(e)){
+
+                        System.out.println("Duck!");
+
+                        removeEntity(e);
+                    }
                 } else {
-                    dropBlock(resDel.cpy(), terrain.getVoxel(resDel)); //TODO HIT or DropBlock
+                    dropBlock(resDel.cpy(), terrain.getVoxel(resDel));
                     terrain.setVoxel(resDel.cpy(), ItemType.EMPTY);
                 }
 
@@ -389,7 +403,7 @@ public class World {
     public void removeEntity(Entity entity) {
         btPairCachingGhostObject ghostObject = ghosts.get(entity);
         btKinematicCharacterController characterController = bodiesControllers.get(entity);
-  
+
         if (ghostObject != null) {
             collisionsWorld.removeAction(characterController);
             collisionsWorld.removeCollisionObject(ghostObject);

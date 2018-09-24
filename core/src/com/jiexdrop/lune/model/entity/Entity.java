@@ -25,6 +25,8 @@ public abstract class Entity {
 
     public Matrix4 transform;
     protected Vector3 position;
+    public Vector3 origin;
+
     protected Quaternion rotation;
 
     protected Routine routine;
@@ -38,6 +40,7 @@ public abstract class Entity {
         this.transform = new Matrix4();
         this.position = new Vector3();
         this.rotation = new Quaternion();
+        this.origin = new Vector3();
         this.speed = GameVariables.ENTITIES_SPEED;
     }
 

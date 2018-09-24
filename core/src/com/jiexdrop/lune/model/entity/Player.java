@@ -19,6 +19,8 @@ public class Player extends Living {
     public Player(){
         name = ItemType.PLAYER.name();
 
+        origin.set(0.0f,1.50f,0.0f);
+
         speed = GameVariables.PLAYER_SPEED;
         size = GameVariables.PLAYER_SIZE;
 
@@ -43,8 +45,8 @@ public class Player extends Living {
     @Override
     public void hit(Living e) {
         if(!e.equals(this)) {
-            e.health-= GameVariables.HEALTH_STEP * (strength/GameVariables.NORMAL_STRENGTH);
-            satiety-= GameVariables.SATIETY_STEP;
+            e.health -= GameVariables.HEALTH_STEP * (strength/GameVariables.NORMAL_STRENGTH);
+            satiety -= GameVariables.SATIETY_STEP;
         }
     }
 
