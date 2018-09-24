@@ -127,8 +127,6 @@ public class Populater {
         btRigidBody.btRigidBodyConstructionInfo dynamicConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(1f, dynamicMotionState, boxShape, dynamicInertia);
         world.constructions.add(dynamicConstructionInfo);
 
-
-
         world.collisionsWorld.addCollisionObject(ghostObject,
                 (short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
                 (short) (btBroadphaseProxy.CollisionFilterGroups.StaticFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));

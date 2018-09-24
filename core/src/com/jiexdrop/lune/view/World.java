@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
@@ -181,12 +182,24 @@ public class World {
 
         populater.populate(this);
 
+        //Update entities
+        for (Entity e:toRemove) {
+            EntityView ev = entitiesViews.get(e);
+            entitiesBodies.remove(ev);
+            entitiesViews.remove(e);
+        }
 
+
+        //Remove entities
         for (Entity e:entitiesViews.keySet()) {
             if(ghosts.containsKey(e)) {
                 ghosts.get(e).getWorldTransform(e.transform);
-                e.update(this);
+
             }
+            e.update(this);
+            e.transform.rotate(Vector3.X, 90);
+            e.transform.rotate(Vector3.Y, e.angle);
+            e.transform.scale(e.getSize().x, e.getSize().y, e.getSize().z);
         }
 
         collisionsWorld.stepSimulation(delta, 5, GameVariables.TIME_STEP);
@@ -374,6 +387,15 @@ public class World {
 
 
     public void removeEntity(Entity entity) {
+        btPairCachingGhostObject ghostObject = ghosts.get(entity);
+        btKinematicCharacterController characterController = bodiesControllers.get(entity);
+  
+        if (ghostObject != null) {
+            collisionsWorld.removeAction(characterController);
+            collisionsWorld.removeCollisionObject(ghostObject);
+            ghostObject.dispose();
+        }
+
         toRemove.add(entity);
     }
 

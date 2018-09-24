@@ -113,19 +113,19 @@ public class GameVariables {
 
     public static final int NORMAL_STRENGTH = 64;
 
-    public static final Vector3 TILES_SIZE = new Vector3(1,1,1);
+    public static final Vector3 TILES_SIZE = new Vector3(0.2f,0.2f,0.2f);
 
-    public static final Vector3 ENEMY_SIZE = new Vector3(1,1,1);
+    public static final Vector3 ENEMY_SIZE = new Vector3(1f,1f,1f);
 
-    public static final Vector3 ENTITY_SIZE = new Vector3(1,2,1);
+    public static final Vector3 ENTITY_SIZE = new Vector3(1f,2f,1f);
 
-    public static final Vector3 NORMAL_SIZE = new Vector3(1,1,1);
+    public static final Vector3 NORMAL_SIZE = new Vector3(1f,1f,1f);
 
     public static final Vector3 DUCK_SIZE = new Vector3(0.5f,0.5f,0.5f);
 
     public static final Vector3 PLAYER_SIZE = new Vector3(0.5f,0.5f,0.5f);
 
-    public static final Vector3 MAGNET_SIZE = new Vector3(1,1,1);
+    public static final Vector3 MAGNET_SIZE = new Vector3(1f,1f,1f);
 
     public static final Vector3 ITEM_SIZE = new Vector3(0.25f,0.25f,0.25f);
 

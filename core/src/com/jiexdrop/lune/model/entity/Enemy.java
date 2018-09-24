@@ -29,8 +29,6 @@ public class Enemy extends Living {
         if(routine !=null) {
             routine.act(this, world);
         }
-
-
     }
 
     @Override

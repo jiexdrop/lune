@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * Created by jiexdrop on 31/08/17.
  */
 
-public class EntityView{
+public class EntityView {
 
     public ArrayList<Renderable> renderables = new ArrayList<Renderable>();
 
