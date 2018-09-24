@@ -50,9 +50,14 @@ public class MoveTo extends Routine {
     }
 
     void moveTo(Entity entity, Vector3 destination, World world){
-
         Vector3 direction = destination.cpy().sub(position.x, position.y, position.z).nor();
 
+        //entity.angle = (float) Math.atan2(destination.y -position.y, destination.z -position.z) ;
+        //entity.angle *= 180/Math.PI;
+
+        entity.angle = 0;
+        //System.out.println(entity.angle);
+        //entity.angle = 90;
         world.moveEntity(entity, world.deltaTime, direction.x, direction.z);
     }
 }

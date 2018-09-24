@@ -58,18 +58,12 @@ public class VoxelRenderer implements RenderableProvider {
             final VoxelChunk chunk = terrain.chunks.get(chunkPos);
 
             if (isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
-
                 if (terrain.dirty.contains(chunkPos)) {
-                    Runnable updateTerrain = new Runnable() {
-                        @Override
-                        public void run() {
-                            mesh.calculateVertices(terrain, chunk, gameResources);
-                        }
-                    };
-                    mesh.toUpdate = true;
-
-                    //Gdx.app.postRunnable(updateTerrain);
-                    Helpers.executorService.submit(updateTerrain);
+                    mesh.calculateVertices(terrain, chunk, gameResources);
+                    if(mesh.getNumIndices()>0 && mesh.getNumVertices()>0) {
+                        world.removeGroundMesh(mesh);
+                        world.addGroundMesh(mesh, chunkPos);
+                    }
                     terrain.dirty.remove(chunkPos);
                 }
             }
@@ -88,7 +82,6 @@ public class VoxelRenderer implements RenderableProvider {
                     if (!isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
                         cleaned_meshes++;
                         world.removeGroundMesh(mesh);
-                        mesh.toUpdate = false;
                         mesh.dispose();
                         meshes.remove(chunkPos);
                         terrain.dirty.add(chunkPos);

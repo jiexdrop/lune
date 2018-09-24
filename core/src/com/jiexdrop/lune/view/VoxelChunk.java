@@ -79,10 +79,10 @@ public class VoxelChunk {
 
                     switch (itemType){
                         case WEEDS:
-                            generateVegetation(gameResources, i, j, k, itemType, vertices);
+                            generateVegetation(gameResources, i, j, k, itemType, vertices, indices);
                             break;
                         case CACTUS:
-                            generateVegetation(gameResources, i, j, k, itemType, vertices);
+                            generateVegetation(gameResources, i, j, k, itemType, vertices, indices);
                             break;
                         default:
                             generateBlock(gameResources, i, j, k, itemType, vertices, indices, terrain);
@@ -181,7 +181,7 @@ public class VoxelChunk {
         return !notInBounds(x, y, z);
     }
 
-    private void generateVegetation(GameResources gameResources, int x, int y, int z, ItemType itemType, FloatArray vertices){
+    private void generateVegetation(GameResources gameResources, int x, int y, int z, ItemType itemType, FloatArray vertices,  ShortArray indices){
 //        createFCross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
 //        createDCross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
 //        createF2Cross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);

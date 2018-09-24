@@ -39,7 +39,7 @@ public class MainMenuRender implements Screen {
         table.setFillParent(true);
         textField = new TextField(""+GameVariables.SEED, main.textures.getTextFieldStyle());
         table.add(textField).width(124).height(64);
-        Button button = new Button( main.textures.getSlotButtonStyle());
+        Button button = new Button(main.textures.getSlotButtonStyle());
         button.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {

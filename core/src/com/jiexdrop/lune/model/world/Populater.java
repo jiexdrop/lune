@@ -13,13 +13,17 @@ import com.badlogic.gdx.physics.bullet.linearmath.btDefaultMotionState;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.jiexdrop.lune.GameVariables;
 import com.jiexdrop.lune.model.entity.Enemy;
+import com.jiexdrop.lune.model.entity.Entity;
 import com.jiexdrop.lune.model.entity.Living;
 import com.jiexdrop.lune.model.entity.Player;
+import com.jiexdrop.lune.model.entity.container.Item;
 import com.jiexdrop.lune.model.entity.routine.Repeat;
+import com.jiexdrop.lune.model.entity.routine.ToInventory;
 import com.jiexdrop.lune.model.entity.routine.Wander;
 import com.jiexdrop.lune.view.EntityType;
 import com.jiexdrop.lune.view.EntityView;
 import com.jiexdrop.lune.view.GameResources;
+import com.jiexdrop.lune.view.ItemType;
 import com.jiexdrop.lune.view.World;
 
 /**
@@ -55,20 +59,32 @@ public class Populater {
         }
     }
 
-    public void addEntity(World world, Vector3 position, EntityType entityType) {
-        Living living;
+    public void addEntity(World world, Vector3 position, EntityType entityType){
+        addEntity(world,position,entityType, null);
+    }
+
+    public void addEntity(World world, Vector3 position, EntityType entityType, ItemType itemType) {
+        Entity entity;
+        EntityView entityView;
 
 
         switch (entityType) {
             case PLAYER:
                 player = new Player();
-                living = player;
+                entity = player;
+                entityView = new EntityView(gameResources.getModel(entityType));
+                break;
+            case MINI_CUBE:
+                entity = new Item(itemType);
+                entity.setRoutine(new ToInventory(world.getPlayer()));
+                entityView = new EntityView(gameResources.getMiniCubeModel(itemType));
                 break;
             default:
                 Enemy enemy = new Enemy(entityType.name());
                 Repeat repeat = new Repeat(new Wander(enemy));
                 enemy.setRoutine(repeat);
-                living = enemy;
+                entity = enemy;
+                entityView = new EntityView(gameResources.getModel(entityType));
                 break;
 
         }
@@ -76,15 +92,15 @@ public class Populater {
 
 
         btPairCachingGhostObject ghostObject = new btPairCachingGhostObject();
-        world.ghosts.put(living, ghostObject);
+        world.ghosts.put(entity, ghostObject);
 
 
-        living.transform.setToTranslation(position);
+        entity.transform.setToTranslation(position);
 
-        ghostObject.setWorldTransform(living.transform);
+        ghostObject.setWorldTransform(entity.transform);
 
 
-        btBoxShape boxShape = new btBoxShape(living.getSize());
+        btBoxShape boxShape = new btBoxShape(entity.getSize());
         world.shapes.add(boxShape);
 
 
@@ -102,7 +118,7 @@ public class Populater {
         world.states.add(dynamicMotionState);
 
 
-        dynamicMotionState.setWorldTransform(living.transform); // Fixme ?
+        dynamicMotionState.setWorldTransform(entity.transform); // Fixme ?
         Vector3 dynamicInertia = Vector3.Zero.cpy();
 
         boxShape.calculateLocalInertia(1f, dynamicInertia);
@@ -120,11 +136,9 @@ public class Populater {
 
 
 
-        EntityView entityView = new EntityView(gameResources.getModel(entityType));
-
-        world.entitiesViews.put(living, entityView);
-        world.controllersBodies.put(entityController,living);
-        world.bodiesControllers.put(living,entityController);
+        world.entitiesViews.put(entity, entityView);
+        world.controllersBodies.put(entityController,entity);
+        world.bodiesControllers.put(entity,entityController);
 
 
     }
