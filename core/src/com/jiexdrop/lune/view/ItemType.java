@@ -29,7 +29,7 @@ public enum ItemType {
     ROOT("root",true,false, 0, GameVariables.WOOD_PLAIN, GameVariables.SATIETY_STEP*2),
     DOOR("door", true,false, 1000, GameVariables.WOOD_PLAIN, 0),
     WALL("wall",true,false, 2000, GameVariables.WOOD_PLAIN, 0),
-    LEAVES("leaves", false, false, 200, GameVariables.GRASS_PLAIN, GameVariables.SATIETY_STEP*5),
+    LEAVES("leaves", false, true, 200, GameVariables.GRASS_PLAIN, GameVariables.SATIETY_STEP*5),
     CACTUS("cactus",false,false, 350, GameVariables.CACTUS_DESERT, GameVariables.SATIETY_STEP*5),
     BRANCHES("branches", false, false, -1, GameVariables.WOOD_PLAIN, 0),
     ROCK("rock",true,false, 500, GameVariables.ROCK_PLAIN, -GameVariables.SATIETY_STEP*2),

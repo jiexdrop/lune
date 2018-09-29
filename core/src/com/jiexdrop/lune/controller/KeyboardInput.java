@@ -2,11 +2,7 @@ package com.jiexdrop.lune.controller;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.input.GestureDetector;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.jiexdrop.lune.LuneGame;
 import com.jiexdrop.lune.GameVariables;
@@ -50,26 +46,26 @@ public class KeyboardInput implements InputProcessor {
     public void update(float deltaTime) {
         //When you move forward you go back because everything has to make sense
         if (keys.containsKey(FORWARD)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 0, -1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, -1, true);
         }
         if (keys.containsKey(BACKWARD)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 1);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 1, true);
         }
         if (keys.containsKey(LEFT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, -1, 0);
+            world.moveEntity(world.getPlayer(), deltaTime, -1, 0, true);
         }
         if (keys.containsKey(RIGHT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 1, 0);
+            world.moveEntity(world.getPlayer(), deltaTime, 1, 0, true);
         }
         if (keys.containsKey(STRAFE_LEFT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, -1, -1);
+            world.moveEntity(world.getPlayer(), deltaTime, -1, -1, true);
         }
         if (keys.containsKey(STRAFE_RIGHT)) {
-            world.moveEntity(world.getPlayer(), deltaTime, 1, -1);
+            world.moveEntity(world.getPlayer(), deltaTime, 1, -1, true);
         }
 
         if(keys.size == 0){
-            world.moveEntity(world.getPlayer(), deltaTime, 0, 0);
+            world.moveEntity(world.getPlayer(), deltaTime, 0, 0, true);
         }
 
     }

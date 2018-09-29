@@ -77,7 +77,8 @@ public class Populater {
             case MINI_CUBE:
                 entity = new Item(itemType);
                 entity.setRoutine(new ToInventory(world.getPlayer()));
-                entityView = new EntityView(gameResources.getMiniCubeModel(itemType));
+                //entityView = new EntityView(gameResources.getMiniCubeModel(itemType));
+                entityView = new EntityView(gameResources.getModel(EntityType.DUCK));
                 break;
             default:
                 Enemy enemy = new Enemy(entityType.name());

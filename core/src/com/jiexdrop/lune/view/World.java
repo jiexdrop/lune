@@ -5,18 +5,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
 import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
 import com.badlogic.gdx.physics.bullet.collision.btAxisSweep3;
-import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseInterface;
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
@@ -34,7 +31,6 @@ import com.badlogic.gdx.physics.bullet.dynamics.btKinematicCharacterController;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
 import com.badlogic.gdx.physics.bullet.linearmath.btDefaultMotionState;
-import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.badlogic.gdx.utils.Array;
 import com.jiexdrop.lune.GameVariables;
@@ -48,7 +44,6 @@ import com.jiexdrop.lune.model.world.Terrain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 
@@ -70,6 +65,7 @@ public class World {
     public EntitiesRenderer entitiesRenderer;
 
     public final HashMap<Vector3, VoxelMesh> meshes = new HashMap<Vector3, VoxelMesh>();
+    public final HashMap<Vector3, VoxelMesh> permeables = new HashMap<Vector3, VoxelMesh>();
 
     ArrayList<Entity> toRemove = new ArrayList<Entity>();
 
@@ -163,16 +159,10 @@ public class World {
 
     }
 
-    private Runnable updateTerrain = new Runnable() {
-        @Override
-        public void run() {
-            terrain.update(populater.player.getPosition());
-        }
-    };
-
     public void update(float delta) {
         deltaTime = delta;
-        Helpers.executorService.submit(updateTerrain);
+
+        terrain.update(populater.player.getPosition());
 
 
         cleanFarTimer++;
@@ -180,6 +170,7 @@ public class World {
             voxelRenderer.cleanFar();
             cleanFarTimer = 0;
         }
+
 
 
         populater.populate(this);
@@ -220,9 +211,11 @@ public class World {
         return bodiesControllers.get(e);
     }
 
-    public void moveEntity(Entity entity, float deltaTime, float x, float z) {
+    public void moveEntity(Entity entity, float deltaTime, float x, float z, boolean rotate) {
         Vector3 tmp = new Vector3(x * deltaTime * GameVariables.NORMAL_SPEED,0, z * deltaTime * GameVariables.NORMAL_SPEED); //FIXME
-        tmp.rotate(Vector3.Y, entity.angle);
+        if(rotate) {
+            tmp.rotate(Vector3.Y, entity.angle);
+        }
         getEntityController(entity).setWalkDirection(tmp);
     }
 
@@ -271,6 +264,39 @@ public class World {
         collisionsWorld.addRigidBody(meshRigidBody,
                 (short) btBroadphaseProxy.CollisionFilterGroups.StaticFilter,
                 (short) (btBroadphaseProxy.CollisionFilterGroups.CharacterFilter | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
+
+        groundMeshes.put(mesh, meshRigidBody);
+
+    }
+
+
+    public void addPermeableMesh(VoxelMesh mesh, Vector3 position) {
+        modelBuilder.begin();
+        MeshPart part = modelBuilder.part(UUID.randomUUID().toString(), mesh, GL20.GL_TRIANGLES, null);
+        modelBuilder.end();
+
+        Array<MeshPart> meshPart = new Array<MeshPart>();
+        meshPart.add(part);
+
+
+        btBvhTriangleMeshShape btBvhTriangleMeshShape = new btBvhTriangleMeshShape(meshPart);
+        shapes.add(btBvhTriangleMeshShape);
+
+        btMotionState groundMotionState = new btDefaultMotionState();
+        Matrix4 transform = new Matrix4().setToTranslation(Helpers.chunkPosToPlayerPos(position));
+        //System.out.println(transform);
+        groundMotionState.setWorldTransform(transform);
+        states.add(groundMotionState);
+
+        btRigidBody.btRigidBodyConstructionInfo groundBodyConstructionInfo = new btRigidBody.btRigidBodyConstructionInfo(0, groundMotionState, btBvhTriangleMeshShape, new Vector3(0, 0, 0));
+        groundBodyConstructionInfo.setFriction(0);
+        constructions.add(groundBodyConstructionInfo);
+
+        btRigidBody meshRigidBody = new btRigidBody(groundBodyConstructionInfo);
+
+        collisionsWorld.addRigidBody(meshRigidBody,
+                (short) btBroadphaseProxy.CollisionFilterGroups.StaticFilter,
+                (short) (btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
 
         groundMeshes.put(mesh, meshRigidBody);
 

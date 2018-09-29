@@ -54,10 +54,11 @@ public class MoveTo extends Routine {
 
         entity.angle = (float) Math.atan2(destination.z - position.z, destination.x - position.x) ;
         entity.angle *= -(180/Math.PI);
+        entity.angle -= 90; // Fix direction for ducks
 
         if(entity.angle < 0) { entity.angle = 360 - (-entity.angle); } // Convert from -180 to 360°
 
-
-        world.moveEntity(entity, world.deltaTime, direction.x, direction.z);
+        world.moveEntity(entity, world.deltaTime, direction.x, direction.z, false);
+//        world.moveEntity(entity, world.deltaTime, 1 , 1);
     }
 }

@@ -25,44 +25,14 @@ public class Generation {
         }
     }
 
-    public class StructureChunk {
-        public HashMap<Vector3, StructureType> structures = new HashMap<Vector3, StructureType>();
-
-        public boolean addStructure(Vector3 pos, StructureType structureType) {
-            if (canAddStructure(pos, structureType)) {
-                structures.put(pos, structureType);
-                return true;
-            }
-            return false;
-        }
-
-        private boolean canAddStructure(Vector3 pos, StructureType structureType) {
-            if (sizeInBounds(pos, structureType)) {
-                for (Vector3 vector3 : structures.keySet()) {
-                    if (Helpers.intersect(vector3, structures.get(vector3).size,
-                            pos, structureType.size)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
-
-        private boolean sizeInBounds(Vector3 pos, StructureType structureType) {
-            return pos.x > structureType.size
-                    && pos.z > structureType.size
-                    && pos.x + structureType.size <= GameVariables.CHUNK_SIZE
-                    && pos.z + structureType.size <= GameVariables.CHUNK_SIZE;
-        }
+    public enum GenerationType {
+        DEBUG, VORONOI
     }
 
     public final HashMap<Vector3, ItemType> tree = new HashMap<Vector3, ItemType>();
     public final HashMap<Vector3, ItemType> dungeon = new HashMap<Vector3, ItemType>();
     public final HashMap<Vector3, ItemType> platform = new HashMap<Vector3, ItemType>();
     public final HashMap<Vector3, ItemType> grass_patch = new HashMap<Vector3, ItemType>();
-    public HashMap<Vector3, StructureChunk> structureChunks = new HashMap<Vector3, StructureChunk>();
-
 
     public Generation() {
         createTree();
@@ -71,12 +41,36 @@ public class Generation {
     }
 
 
-    public void generateChunk(Terrain terrain, Vector3 chunkPos) {
+    public void generateChunk(Terrain terrain, Vector3 chunkPos, GenerationType generationType) {
+        switch (generationType){
+            case DEBUG:
+                generateDebug(terrain, chunkPos);
+            case VORONOI:
+                generateVoronoi(terrain, chunkPos);
+        }
+    }
+
+    public void generateVoronoi(Terrain terrain, Vector3 chunkPos){
         VoxelChunk voxelChunk = terrain.chunks.get(chunkPos);
         if (voxelChunk == null) {
             voxelChunk = new VoxelChunk(chunkPos);
             terrain.chunks.put(chunkPos, voxelChunk);
-            structureChunks.put(chunkPos, new StructureChunk());
+
+            for (int i = 0; i < GameVariables.CHUNK_SIZE; i++) {
+                for (int j = 0; j < GameVariables.CHUNK_SIZE; j++) {
+                    for (int k = 0; k < GameVariables.CHUNK_SIZE; k++) {
+
+                    }
+                }
+            }
+        }
+    }
+
+    public void generateDebug(Terrain terrain, Vector3 chunkPos){
+        VoxelChunk voxelChunk = terrain.chunks.get(chunkPos);
+        if (voxelChunk == null) {
+            voxelChunk = new VoxelChunk(chunkPos);
+            terrain.chunks.put(chunkPos, voxelChunk);
 
             for (int i = 0; i < GameVariables.CHUNK_SIZE; i++) {
                 for (int j = 0; j < GameVariables.CHUNK_SIZE; j++) {
@@ -88,7 +82,7 @@ public class Generation {
 
                         if (s > 1) {
                             voxelChunk.set(i, j, k, ItemType.GRASS);
-
+                            if(j+1<16) voxelChunk.set(i,j+1, k, ItemType.WEEDS);
                         }
 
                     }
@@ -100,7 +94,6 @@ public class Generation {
 
             terrain.cleanNeighboors(chunkPos);
         }
-
     }
 
     private void generateStructure(VoxelChunk chunk, int x, int y, int z, StructureType structureType) {

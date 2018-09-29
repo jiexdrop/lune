@@ -42,7 +42,7 @@ public class Terrain {
         activeChunk = Helpers.playerPosToChunkPos(pos);
 
         for (Vector3 v : indices) {
-            generation.generateChunk(this, activeChunk.cpy().add(v.x, v.y, v.z));
+            generation.generateChunk(this, activeChunk.cpy().add(v.x, v.y, v.z), Generation.GenerationType.DEBUG);
         }
     }
 

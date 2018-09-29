@@ -27,8 +27,21 @@ public class VoxelMesh extends Mesh {
         super(isStatic, maxVertices, maxIndices, attributes);
     }
 
-    public void calculateVertices(Terrain terrain, VoxelChunk chunk, GameResources gameResources) {
-        chunk.calculateVertices(terrain, vertices, indices, gameResources);
+    public void calculateSolidVertices(Terrain terrain, VoxelChunk chunk, GameResources gameResources) {
+        chunk.calculateSolidVertices(terrain, vertices, indices, gameResources);
+        if (vertices.size > 0 && indices.size > 0) {
+            setVertices(vertices.toArray());
+            setIndices(indices.toArray());
+
+            vertices.clear();
+            indices.clear();
+            vertices.shrink();
+            indices.shrink();
+        }
+    }
+
+    public void calculatePermeableVertices(Terrain terrain, VoxelChunk chunk, GameResources gameResources) {
+        chunk.calculatePermeableVertices(terrain, vertices, indices, gameResources);
         if (vertices.size > 0 && indices.size > 0) {
             setVertices(vertices.toArray());
             setIndices(indices.toArray());

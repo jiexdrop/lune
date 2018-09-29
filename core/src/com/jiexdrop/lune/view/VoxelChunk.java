@@ -27,6 +27,7 @@ public class VoxelChunk {
     public static int VERTEX_SIZE = 12;
     public final ItemType[][][] voxels = new ItemType[GameVariables.CHUNK_SIZE][GameVariables.CHUNK_SIZE][GameVariables.CHUNK_SIZE];
     public int blockCounter = 0;
+    public int permeableCounter = 0;
     public final Vector3 position;
 
     public enum Face {
@@ -70,26 +71,34 @@ public class VoxelChunk {
      * @param gameResources
      * @return the number of vertices produced
      */
-    public void calculateVertices(Terrain terrain, FloatArray vertices, ShortArray indices, GameResources gameResources) {
+    public void calculateSolidVertices(Terrain terrain, FloatArray vertices, ShortArray indices, GameResources gameResources) {
+        for (int i = 0; i < GameVariables.CHUNK_SIZE; i++) {
+            for (int j = 0; j <GameVariables.CHUNK_SIZE; j++) {
+                for (int k = 0; k < GameVariables.CHUNK_SIZE; k++) {
+                    ItemType itemType = voxels[i][j][k];
+                    if (itemType==null || itemType.equals(ItemType.EMPTY) || itemType.vegetation) continue;
+
+                    generateBlock(gameResources, i, j, k, itemType, vertices, indices, terrain);
+
+                    blockCounter++;
+                }
+            }
+        }
+    }
+
+
+    public void calculatePermeableVertices(Terrain terrain, FloatArray vertices, ShortArray indices, GameResources gameResources) {
         for (int i = 0; i < GameVariables.CHUNK_SIZE; i++) {
             for (int j = 0; j <GameVariables.CHUNK_SIZE; j++) {
                 for (int k = 0; k < GameVariables.CHUNK_SIZE; k++) {
                     ItemType itemType = voxels[i][j][k];
                     if (itemType==null || itemType.equals(ItemType.EMPTY)) continue;
 
-                    switch (itemType){
-                        case WEEDS:
-                            generateVegetation(gameResources, i, j, k, itemType, vertices, indices);
-                            break;
-                        case CACTUS:
-                            generateVegetation(gameResources, i, j, k, itemType, vertices, indices);
-                            break;
-                        default:
-                            generateBlock(gameResources, i, j, k, itemType, vertices, indices, terrain);
-                            break;
+                    if(itemType.vegetation) {
+                        generateVegetation(gameResources, i, j, k, itemType, vertices, indices);
                     }
 
-                    blockCounter++;
+                    permeableCounter++;
                 }
             }
         }
@@ -161,13 +170,11 @@ public class VoxelChunk {
         if (notInBounds(x, y, z)) {
             if (neighboor == null) {
                 return false;
-            } else if (neighboor.voxels[nX][nY][nZ] != null) {
-                return false;
-            } else {
+            } else if (neighboor.voxels[nX][nY][nZ] == null) {
                 return true;
-            }
+            } else return neighboor.voxels[nX][nY][nZ].vegetation;
         }
-        return voxels[x][y][z] == null || voxels[x][y][z].equals(ItemType.EMPTY);
+        return (voxels[x][y][z] == null) || voxels[x][y][z].equals(ItemType.EMPTY) || voxels[x][y][z].vegetation;
     }
 
     private boolean notInBounds(int x, int y, int z){
@@ -181,35 +188,22 @@ public class VoxelChunk {
         return !notInBounds(x, y, z);
     }
 
-    private void generateVegetation(GameResources gameResources, int x, int y, int z, ItemType itemType, FloatArray vertices,  ShortArray indices){
-//        createFCross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
-//        createDCross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
-//        createF2Cross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
-//        createD2Cross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
-//
-//        if(inBounds(x, y, z+1) && voxels[x][y][z+1] != null && !voxels[x][y][z+1].vegetation) {
-//            createFront(voxels[x][y][z+1], gameResources.getTextureRegion(voxels[x][y][z+1]), x, y, z+1, vertices);
-//        }
-//
-//        if(inBounds(x, y, z-1) && voxels[x][y][z-1] != null && !voxels[x][y][z-1].vegetation) {
-//            createBack(voxels[x][y][z-1], gameResources.getTextureRegion(voxels[x][y][z-1]), x, y, z-1, vertices);
-//        }
-//
-//        if(inBounds(x-1, y, z) && voxels[x-1][y][z] != null && !voxels[x-1][y][z].vegetation) {
-//            createRight(voxels[x-1][y][z], gameResources.getTextureRegion(voxels[x-1][y][z]), x-1, y, z, vertices);
-//        }
-//
-//        if(inBounds(x+1, y, z) && voxels[x+1][y][z] != null && !voxels[x+1][y][z].vegetation) {
-//            createLeft(voxels[x+1][y][z], gameResources.getTextureRegion(voxels[x+1][y][z]), x+1, y, z, vertices);
-//        }
-//
-//        if(inBounds(x, y+1, z) && voxels[x][y+1][z] != null && !voxels[x][y+1][z].vegetation) {
-//            createBottom(voxels[x][y+1][z], gameResources.getTextureRegion(voxels[x][y+1][z]), x, y+1, z, vertices);
-//        }
-//
-//
-//        createTop(voxels[x][y-1][z], gameResources.getTextureRegion(voxels[x][y-1][z]), x, y-1, z, vertices);
+    private void generateVegetation(GameResources gameResources, int x, int y, int z, ItemType itemType, FloatArray vertices, ShortArray indices){
+        int vertexOffset = vertices.size / VERTEX_SIZE;
+        indices.addAll((short) (vertexOffset), (short) (1 + vertexOffset), (short) (2 + vertexOffset), (short) (2 + vertexOffset), (short) (3 + vertexOffset), (short) (vertexOffset));
+        createFCross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
 
+        vertexOffset = vertices.size / VERTEX_SIZE;
+        indices.addAll((short) (vertexOffset), (short) (1 + vertexOffset), (short) (2 + vertexOffset), (short) (2 + vertexOffset), (short) (3 + vertexOffset), (short) (vertexOffset));
+        createDCross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
+
+        vertexOffset = vertices.size / VERTEX_SIZE;
+        indices.addAll((short) (vertexOffset), (short) (1 + vertexOffset), (short) (2 + vertexOffset), (short) (2 + vertexOffset), (short) (3 + vertexOffset), (short) (vertexOffset));
+        createF2Cross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
+
+        vertexOffset = vertices.size / VERTEX_SIZE;
+        indices.addAll((short) (vertexOffset), (short) (1 + vertexOffset), (short) (2 + vertexOffset), (short) (2 + vertexOffset), (short) (3 + vertexOffset), (short) (vertexOffset));
+        createD2Cross(itemType, gameResources.getTextureRegion(itemType), x, y, z, vertices);
     }
 
     public static void createFCross(ItemType itemType, TextureRegion textureRegion, int x, int y, int z, FloatArray vertices) {

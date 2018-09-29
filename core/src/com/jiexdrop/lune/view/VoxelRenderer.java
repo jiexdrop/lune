@@ -37,6 +37,8 @@ public class VoxelRenderer implements RenderableProvider {
 
     public HashMap<Vector3, VoxelMesh> meshes;
 
+    public HashMap<Vector3, VoxelMesh> permeables;
+
 
     public VoxelRenderer(GameResources gameResources, World world, PerspectiveCamera camera) {
         this.gameResources = gameResources;
@@ -44,6 +46,7 @@ public class VoxelRenderer implements RenderableProvider {
         this.terrain = world.terrain;
         this.camera = camera;
         this.meshes = world.meshes;
+        this.permeables = world.permeables;
     }
 
     //        if (GameVariables.DEBUG) {
@@ -54,16 +57,24 @@ public class VoxelRenderer implements RenderableProvider {
         for (final Vector3 chunkPos : terrain.chunks.keySet()) {
 
             final VoxelMesh mesh = meshes.get(chunkPos);
+            final VoxelMesh permeable = permeables.get(chunkPos);
             if (mesh == null) continue;
+            if (permeable == null) continue;
             final VoxelChunk chunk = terrain.chunks.get(chunkPos);
 
             if (isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
                 if (terrain.dirty.contains(chunkPos)) {
-                    mesh.calculateVertices(terrain, chunk, gameResources);
-                    if(mesh.getNumIndices()>0 && mesh.getNumVertices()>0) {
+                    mesh.calculateSolidVertices(terrain, chunk, gameResources);
+                    permeable.calculatePermeableVertices(terrain, chunk, gameResources);
+                    if (mesh.getNumIndices() > 0 && mesh.getNumVertices() > 0) {
                         world.removeGroundMesh(mesh);
                         world.addGroundMesh(mesh, chunkPos);
                     }
+                    if (permeable.getNumIndices() > 0 && permeable.getNumVertices() > 0) {
+                        world.removeGroundMesh(permeable);
+                        world.addPermeableMesh(permeable, chunkPos);
+                    }
+                    
                     terrain.dirty.remove(chunkPos);
                 }
             }
@@ -71,26 +82,23 @@ public class VoxelRenderer implements RenderableProvider {
         }
     }
 
-    public synchronized void cleanFar(){
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                int cleaned_meshes = 0;
-                for (final Vector3 chunkPos : terrain.chunks.keySet()) {
-                    final VoxelMesh mesh = meshes.get(chunkPos);
-                    if (mesh == null) continue;
-                    if (!isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
-                        cleaned_meshes++;
-                        world.removeGroundMesh(mesh);
-                        mesh.dispose();
-                        meshes.remove(chunkPos);
-                        terrain.dirty.add(chunkPos);
-                    }
-                }
-                GameVariables.CLEANED_MESHES = cleaned_meshes;
+    public synchronized void cleanFar() {
+
+        int cleaned_meshes = 0;
+        for (final Vector3 chunkPos : terrain.chunks.keySet()) {
+            final VoxelMesh mesh = meshes.get(chunkPos);
+            if (mesh == null) continue;
+            if (!isVisible(Helpers.chunkPosToPlayerPos(chunkPos))) {
+                cleaned_meshes++;
+                world.removeGroundMesh(mesh);
+                mesh.dispose();
+                meshes.remove(chunkPos);
+                permeables.remove(chunkPos);
+                terrain.dirty.add(chunkPos);
             }
-        };
-        Gdx.app.postRunnable(runnable);
+        }
+        GameVariables.CLEANED_MESHES = cleaned_meshes;
+
     }
 
     @Override
@@ -106,12 +114,18 @@ public class VoxelRenderer implements RenderableProvider {
                     VoxelMesh addMesh = new VoxelMesh(true, GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * 12 * 4, // 12 = Pos + Normal + tex + Color
                             GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * 36 / 3,
                             VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
+                    VoxelMesh addPermeables = new VoxelMesh(true, GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * 12 * 4, // 12 = Pos + Normal + tex + Color
+                            GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * GameVariables.CHUNK_SIZE * 36 / 3,
+                            VertexAttribute.Position(), VertexAttribute.Normal(), VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
 
                     meshes.put(chunkPos, addMesh);
+                    permeables.put(chunkPos, addPermeables);
                 }
 
                 final VoxelMesh mesh = meshes.get(chunkPos);
+                final VoxelMesh permeable = permeables.get(chunkPos);
                 if (mesh == null) continue;
+                if (permeable == null) continue;
 
                 //final VoxelChunk chunk = terrain.chunks.get(chunkPos);
 
@@ -119,6 +133,7 @@ public class VoxelRenderer implements RenderableProvider {
 
 
                 addMeshToRenderables(mesh, pool, chunkPos, renderables);
+                addMeshToRenderables(permeable, pool, chunkPos, renderables);
 
                 totalVerts += mesh.getNumVertices();
                 totalIndices += mesh.getNumIndices();
@@ -165,7 +180,7 @@ public class VoxelRenderer implements RenderableProvider {
     }
 
     protected boolean isVisible(Vector3 position) {
-        return Helpers.intersect(camera.position,GameVariables.CAMERA_FAR/2, position, 1) && camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
+        return Helpers.intersect(camera.position, GameVariables.CAMERA_FAR / 2, position, 1) && camera.frustum.sphereInFrustum(position.sub(-GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f, -GameVariables.CHUNK_SIZE / 2f), GameVariables.CHUNK_SIZE);
     }
 
 
