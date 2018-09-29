@@ -10,7 +10,7 @@ import com.badlogic.gdx.math.Vector3;
 
 public class GameVariables {
     //TEXTURES
-    public static final String MAIN_TEXTURE_ATLAS = "main.atlas";
+    public static final String MAIN_TEXTURE_ATLAS = "Lune.atlas";
 
     //FOLDERS
     private static final String MODELS_FOLDER = "models/";

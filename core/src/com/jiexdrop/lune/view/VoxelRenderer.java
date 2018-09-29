@@ -74,7 +74,7 @@ public class VoxelRenderer implements RenderableProvider {
                         world.removeGroundMesh(permeable);
                         world.addPermeableMesh(permeable, chunkPos);
                     }
-                    
+
                     terrain.dirty.remove(chunkPos);
                 }
             }
